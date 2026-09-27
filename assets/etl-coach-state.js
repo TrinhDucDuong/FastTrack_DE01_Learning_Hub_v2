@@ -5,7 +5,7 @@
 }(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
 
-  const key = 'de01-etl-coach-v1';
+  const key = 'de01-v2-etl-coach-v1';
   const defaults = Object.freeze({
     version: 1,
     profile: Object.freeze({ source: 'database', target: 'warehouse', mode: 'incremental', scale: 'small' }),

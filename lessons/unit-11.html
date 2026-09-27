@@ -1,8 +1,28 @@
 <!doctype html>
-<html lang="vi" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="DE01 Unit 11: Batch Data Processing on Azure"><title>DE01 · 11 · Batch Data Processing on Azure</title><link rel="stylesheet" href="../assets/lesson.css"></head>
+<html lang="vi" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="DE01 Unit 11: Batch Data Processing on Azure"><title>DE01 · 11 · Batch Data Processing on Azure</title><link rel="stylesheet" href="../assets/lesson.css"><link rel="stylesheet" href="../assets/v2.css"></head>
 <body data-unit="11"><header class="topbar"><a class="back" href="../index.html">← Learning Hub</a><span class="top-title">Unit 11 · Batch Data Processing on Azure</span><div class="tools"><button class="print" id="print">In</button><button id="theme" aria-label="Đổi giao diện">◐</button></div></header>
 <section class="lesson-hero"><div class="lesson-hero-inner"><div class="unit">DE01 · Unit 11 / 18</div><h1>Batch Data Processing on Azure</h1><p>Orchestrate batch với watermark, CDC, quality gate và backfill.</p><div class="lesson-meta"><span class="pill">ADF</span><span class="pill">Batch</span><span class="pill">CDC</span><span class="pill">Backfill</span></div></div><div class="progress-wrap"><div class="progress-track"><div class="progress-fill" id="courseProgress"></div></div><button class="done-btn" id="doneButton">○ Đánh dấu đã học</button></div></section>
-<div class="page"><aside class="toc"><p class="toc-title">Trong bài này</p><nav id="tocNav"></nav></aside><main class="content"><h2 id="1-batch-pipeline-la-gi">1. Batch pipeline là gì?</h2>
+<div class="page"><aside class="toc"><p class="toc-title">Trong bài này</p><nav id="tocNav"></nav></aside><main class="content">
+<section class="beginner-guide" aria-labelledby="beginner-start">
+<p class="guide-label">V2 · Bắt đầu từ đây</p>
+<h2 id="beginner-start">Batch xử lý một phạm vi dữ liệu hữu hạn</h2>
+<p>Batch không nhất thiết nghĩa là chạy mỗi đêm; đó là xử lý một tập hoặc khoảng dữ liệu xác định. Một run tốt biết đang xử lý ngày nào, file nào và sẽ tạo output nào. Khi thất bại giữa chừng, chạy lại phải không nhân đôi kết quả.</p>
+<h3 id="beginner-vocabulary">Từ vựng trước khi đọc tiếp</h3>
+<dl><dt>Orchestration</dt><dd>Điều phối thứ tự và điều kiện chạy bước.</dd>
+<dt>Watermark</dt><dd>Mốc dữ liệu đã xử lý thành công.</dd>
+<dt>Idempotency</dt><dd>Làm lại cùng công việc tạo cùng trạng thái cuối.</dd>
+<dt>Publish</dt><dd>Đưa output đã kiểm tra tới consumer.</dd></dl>
+<h3 id="beginner-example">Đọc ví dụ theo từng bước</h3>
+<ol><li>Chốt interval [00:00, 24:00) và copy input vào raw.</li><li>Transform vào staging, không cho dashboard dùng dữ liệu đang ghi dở.</li><li>Đối soát xong mới publish và cập nhật progress; nếu lỗi thì giữ progress cũ.</li></ol>
+<pre><code>Extract → Raw → Transform → Staging
+                             ↓ validate count / totals
+                          Publish → Advance watermark</code></pre>
+<p><strong>Kết quả và cách hiểu:</strong> Tách staging khỏi publish cho phép chặn output sai mà vẫn giữ bản tốt đang phục vụ. Rerun cần replace đúng partition hoặc merge theo khóa ổn định.</p>
+<p class="guide-caution"><strong>Dễ nhầm:</strong> Retry giải quyết lỗi tạm thời nhưng không tự làm append idempotent. Thêm retry vào một sink ghi trùng chỉ có thể làm tình hình tệ hơn.</p>
+<details><summary>Tự kiểm tra: Activity báo success nhưng revenue lệch đáng kể: publish chưa?</summary><p>Chưa. Reconcile cùng scope rồi kiểm tra filter, reject, dedup và JOIN. Technical success khác việc số liệu đạt hợp đồng chất lượng.</p></details>
+<p><a href="#practice-cases">Ôn các tình huống áp dụng trong bài ↓</a> · <a href="../question-bank.html?unit=11">Xem câu hỏi và lời giải của unit</a></p>
+</section>
+<h2 id="1-batch-pipeline-la-gi">1. Batch pipeline là gì?</h2>
 <p>Batch xử lý một tập dữ liệu hữu hạn theo lịch hoặc sự kiện: mỗi giờ, mỗi ngày hoặc khi file đến. Mục tiêu không chỉ là copy thành công mà còn đúng dữ liệu, rerun an toàn và trace được.</p>
 <pre><code>Source -&gt; Ingest -&gt; Bronze -&gt; Validate/Transform -&gt; Silver -&gt; Gold -&gt; Publish
               \-&gt; audit, metrics, alert, quarantine</code></pre>
@@ -143,5 +163,11 @@ customers    | bronze/...  | full      | null          | true</code></pre>
 <li><strong>Copy activity có biến ADF thành compute engine?</strong> Không; nó chủ yếu move data, transform lớn nên giao engine phù hợp.</li>
 <li><strong>Tại sao metadata-driven pipeline khó hơn lúc đầu?</strong> Cần contract/config validation và generic error handling, đổi lại scale nhiều entity nhất quán.</li>
 <li><strong>Retry mọi lỗi schema có ích không?</strong> Không; lỗi permanent chỉ tốn thời gian và che incident.</li>
-</ol></main></div>
-<nav class="lesson-nav"><a href="unit-10.html"><small>← Bài trước</small><b>Data Storage Solutions on Azure</b></a><a class="next" href="unit-12.html"><small>Bài tiếp →</small><b>Real-time Data Streaming on Azure</b></a></nav><footer>FastTrack DE01 Learning Hub · Unit 11 / 18</footer><script src="../assets/lesson.js"></script></body></html>
+</ol><section class="practice-cases"><h2 id="practice-cases">Vận dụng: hiểu lý do trước khi chọn đáp án</h2>
+<p>Đọc tình huống, tự giải thích bằng lời của bạn rồi đối chiếu lời giải. Câu hỏi tiếng Anh giữ các thuật ngữ chuyên môn; phần giải thích dùng tiếng Việt.</p>
+<article class="case-card"><h3 id="practice-1-s5-q04">ADF điều phối và sao chép</h3><p lang="en">What is a main role of Azure Data Factory in the course architecture?</p><details><summary>Xem đáp án đúng và cách suy luận</summary><p><strong>Orchestrating and moving data between systems</strong></p><p>ADF có thể lập lịch, sao chép dữ liệu và yêu cầu hệ thống xử lý tiếp theo chạy. Ví dụ copy file từ SFTP vào ADLS, sau đó kích hoạt notebook Databricks. Điều phối là quyết định bước nào chạy khi nào; transformation là tính toán nội dung dữ liệu.</p></details></article>
+<article class="case-card"><h3 id="practice-2-s3-q01">Chia vai trò Azure</h3><p lang="en">A nightly process must copy files from SFTP to ADLS, run Spark transformations, and expose curated data for analytical reporting. Which Azure design best fits the taught responsibilities?</p><details><summary>Xem đáp án đúng và cách suy luận</summary><p><strong>Azure Data Factory for orchestration/copy, Azure Databricks for transformation, and Synapse or Azure SQL for serving</strong></p><p>ADF điều phối và copy SFTP → ADLS; Databricks/Spark biến đổi; Synapse hoặc Azure SQL có thể phục vụ query báo cáo tùy workload. Tách nơi chứa dữ liệu, nơi tính toán và nơi điều phối giúp xác định trách nhiệm và nơi điều tra khi lỗi.</p></details></article>
+<article class="case-card"><h3 id="practice-2-s3-q02">Chạy lại batch an toàn</h3><p lang="en">A daily batch fails after writing some rows. It is rerun, and the target now contains duplicated revenue for that date. Which redesign best makes reruns safe?</p><details><summary>Xem đáp án đúng và cách suy luận</summary><p><strong>Replace the affected partition or merge deterministically on the intended keys for that run</strong></p><p>Nếu cùng ngày bị append lần nữa, doanh thu bị nhân đôi. Replace partition bị ảnh hưởng hoặc merge theo khóa xác định giúp cùng input tạo cùng trạng thái cuối. Cần staging, kiểm tra và publish có kiểm soát để thay partition không làm mất bản tốt khi bước ghi lỗi.</p></details></article>
+<article class="case-card"><h3 id="practice-2-s3-q11">Job xanh nhưng revenue sai</h3><p lang="en">A pipeline activity reports success, but the curated total revenue differs materially from the validated source total for the same business date. What should happen before publishing?</p><details><summary>Xem đáp án đúng và cách suy luận</summary><p><strong>Reconcile the stages, investigate rejected/filtered records or transformation logic, and resolve the mismatch</strong></p><p>Technical success chỉ chứng minh activity chạy xong. Trước publish cần đối soát cùng business date, filter, grain và currency; xem rejected rows, duplicate join và logic tính tiền. Quality gate phải ngăn số liệu chưa giải thích được tới người dùng.</p></details></article>
+<p><a href="../quiz.html?mode=lesson&amp;unit=11">Làm toàn bộ quiz Unit 11 →</a></p></section></main></div>
+<nav class="lesson-nav"><a href="unit-10.html"><small>← Bài trước</small><b>Data Storage Solutions on Azure</b></a><a class="next" href="unit-12.html"><small>Bài tiếp →</small><b>Real-time Data Streaming on Azure</b></a></nav><footer>FastTrack DE01 Learning Hub V2 · Unit 11 / 18</footer><script src="../assets/lesson.js"></script></body></html>

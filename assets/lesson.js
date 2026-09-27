@@ -1,7 +1,7 @@
 (function(){
   const root=document.documentElement;
   const unit=String(document.body.dataset.unit||'');
-  const saved=new Set(JSON.parse(localStorage.getItem('de01-progress')||'[]'));
+  const saved=new Set(JSON.parse(localStorage.getItem('de01-v2-progress')||'[]'));
   const button=document.getElementById('doneButton');
   const fill=document.getElementById('courseProgress');
   const meta=document.querySelector('.lesson-meta');
@@ -21,14 +21,14 @@
   }
   button.addEventListener('click',function(){
     if(saved.has(unit)) saved.delete(unit); else saved.add(unit);
-    localStorage.setItem('de01-progress',JSON.stringify(Array.from(saved)));
+    localStorage.setItem('de01-v2-progress',JSON.stringify(Array.from(saved)));
     renderProgress();
   });
-  const storedTheme=localStorage.getItem('de01-theme');
+  const storedTheme=localStorage.getItem('de01-v2-theme');
   if(storedTheme) root.dataset.theme=storedTheme;
   document.getElementById('theme').addEventListener('click',function(){
     root.dataset.theme=root.dataset.theme==='dark'?'light':'dark';
-    localStorage.setItem('de01-theme',root.dataset.theme);
+    localStorage.setItem('de01-v2-theme',root.dataset.theme);
   });
   document.getElementById('print').addEventListener('click',function(){window.print()});
   const headings=Array.from(document.querySelectorAll('.content h2,.content h3'));

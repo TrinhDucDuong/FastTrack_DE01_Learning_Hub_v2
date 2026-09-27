@@ -1,8 +1,28 @@
 <!doctype html>
-<html lang="vi" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="DE01 Unit 9: Azure Fundamentals &amp; Core Infrastructure"><title>DE01 · 09 · Azure Fundamentals &amp; Core Infrastructure</title><link rel="stylesheet" href="../assets/lesson.css"></head>
+<html lang="vi" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="DE01 Unit 9: Azure Fundamentals &amp; Core Infrastructure"><title>DE01 · 09 · Azure Fundamentals &amp; Core Infrastructure</title><link rel="stylesheet" href="../assets/lesson.css"><link rel="stylesheet" href="../assets/v2.css"></head>
 <body data-unit="9"><header class="topbar"><a class="back" href="../index.html">← Learning Hub</a><span class="top-title">Unit 09 · Azure Fundamentals &amp; Core Infrastructure</span><div class="tools"><button class="print" id="print">In</button><button id="theme" aria-label="Đổi giao diện">◐</button></div></header>
 <section class="lesson-hero"><div class="lesson-hero-inner"><div class="unit">DE01 · Unit 09 / 18</div><h1>Azure Fundamentals &amp; Core Infrastructure</h1><p>Tổ chức resource, identity, network, governance và chi phí cloud.</p><div class="lesson-meta"><span class="pill">Azure</span><span class="pill">Entra ID</span><span class="pill">RBAC</span><span class="pill">VNet</span></div></div><div class="progress-wrap"><div class="progress-track"><div class="progress-fill" id="courseProgress"></div></div><button class="done-btn" id="doneButton">○ Đánh dấu đã học</button></div></section>
-<div class="page"><aside class="toc"><p class="toc-title">Trong bài này</p><nav id="tocNav"></nav></aside><main class="content"><h2 id="1-muc-tieu">1. Mục tiêu</h2>
+<div class="page"><aside class="toc"><p class="toc-title">Trong bài này</p><nav id="tocNav"></nav></aside><main class="content">
+<section class="beginner-guide" aria-labelledby="beginner-start">
+<p class="guide-label">V2 · Bắt đầu từ đây</p>
+<h2 id="beginner-start">Azure: nơi chạy, nơi lưu và ai được truy cập</h2>
+<p>Cloud cung cấp tài nguyên qua dịch vụ thay vì bạn tự mua và quản lý tất cả máy chủ. Trong data platform, tách ba câu hỏi: dữ liệu ở đâu, compute nào xử lý và identity nào được phép làm việc. Các tên dịch vụ sẽ dễ nhớ hơn khi gắn với trách nhiệm.</p>
+<h3 id="beginner-vocabulary">Từ vựng trước khi đọc tiếp</h3>
+<dl><dt>Subscription</dt><dd>Cấp quản lý tài nguyên, quota và billing.</dd>
+<dt>Resource group</dt><dd>Container logic cho tài nguyên liên quan để quản lý lifecycle và access.</dd>
+<dt>Managed identity</dt><dd>Danh tính workload do Azure quản lý, dùng lấy token.</dd>
+<dt>RBAC</dt><dd>Cấp role cho principal tại scope cụ thể.</dd></dl>
+<h3 id="beginner-example">Đọc ví dụ theo từng bước</h3>
+<ol><li>Một workload có resource group chứa storage và Data Factory.</li><li>Pipeline dùng managed identity để xin token, rồi gọi storage.</li><li>RBAC cho phép identity đọc raw và ghi curated; network cũng phải cho request đi tới đích.</li></ol>
+<pre><code>Pipeline identity → token → Storage
+                   quyền: read raw / write curated
+                   mạng: DNS + route + firewall phù hợp</code></pre>
+<p><strong>Kết quả và cách hiểu:</strong> Đúng identity chưa đủ nếu không có quyền; đúng quyền chưa đủ nếu DNS/firewall chặn. Phân tích theo từng lớp giúp xử lý lỗi 403 hoặc timeout có trật tự.</p>
+<p class="guide-caution"><strong>Dễ nhầm:</strong> Resource group không phải một bức tường network. Gom tài nguyên cùng group không tự cho chúng kết nối hoặc đọc dữ liệu của nhau.</p>
+<details><summary>Tự kiểm tra: Private endpoint có rồi nhưng hostname vẫn ra public IP: kiểm tra gì?</summary><p>Name resolution và private DNS link trước. Ứng dụng cần resolve hostname dịch vụ tới private IP và có network path tới IP đó.</p></details>
+<p><a href="#practice-cases">Ôn các tình huống áp dụng trong bài ↓</a> · <a href="../question-bank.html?unit=9">Xem câu hỏi và lời giải của unit</a></p>
+</section>
+<h2 id="1-muc-tieu">1. Mục tiêu</h2>
 <p>Hiểu cách Azure tổ chức tài nguyên, danh tính, mạng, chi phí và chọn building block cho một data platform cơ bản.</p>
 <h2 id="2-cau-truc-quan-ly-tai-nguyen">2. Cấu trúc quản lý tài nguyên</h2>
 <pre><code>Microsoft Entra tenant
@@ -139,5 +159,8 @@ BI identity
 <li><strong>Managed identity có nghĩa không cần phân quyền?</strong> Không; identity vẫn cần role tối thiểu.</li>
 <li><strong>Private endpoint có tự sửa DNS không?</strong> Cần cấu hình/resolution đúng, nhất là hybrid network.</li>
 <li><strong>Tag có chặn user đọc dữ liệu không?</strong> Không; dùng RBAC/ACL/policy phù hợp.</li>
-</ol></main></div>
-<nav class="lesson-nav"><a href="unit-08.html"><small>← Bài trước</small><b>Data Transformation with dbt</b></a><a class="next" href="unit-10.html"><small>Bài tiếp →</small><b>Data Storage Solutions on Azure</b></a></nav><footer>FastTrack DE01 Learning Hub · Unit 09 / 18</footer><script src="../assets/lesson.js"></script></body></html>
+</ol><section class="practice-cases"><h2 id="practice-cases">Vận dụng: hiểu lý do trước khi chọn đáp án</h2>
+<p>Đọc tình huống, tự giải thích bằng lời của bạn rồi đối chiếu lời giải. Câu hỏi tiếng Anh giữ các thuật ngữ chuyên môn; phần giải thích dùng tiếng Việt.</p>
+<article class="case-card"><h3 id="practice-2-s4-q12">Resource group</h3><p lang="en">In Azure, what is a resource group?</p><details><summary>Xem đáp án đúng và cách suy luận</summary><p><strong>A logical container used to organize related resources for lifecycle and access management</strong></p><p>Resource group là container logic gom tài nguyên Azure để quản lý lifecycle và quyền theo scope. Ví dụ một storage và Data Factory thuộc cùng workload. Subscription vẫn là cấp quản lý riêng; resource group không phải firewall hay database schema.</p></details></article>
+<p><a href="../quiz.html?mode=lesson&amp;unit=9">Làm toàn bộ quiz Unit 9 →</a></p></section></main></div>
+<nav class="lesson-nav"><a href="unit-08.html"><small>← Bài trước</small><b>Data Transformation with dbt</b></a><a class="next" href="unit-10.html"><small>Bài tiếp →</small><b>Data Storage Solutions on Azure</b></a></nav><footer>FastTrack DE01 Learning Hub V2 · Unit 09 / 18</footer><script src="../assets/lesson.js"></script></body></html>

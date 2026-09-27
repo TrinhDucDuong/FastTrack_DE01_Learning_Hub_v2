@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Trang tổng hợp kiến thức Data Engineering DE01 từ Git đến Capstone.">
-  <title>FastTrack DE01 Learning Hub</title>
+  <title>FastTrack DE01 Learning Hub V2</title>
   <style>
     :root {
       --ink: #14213d;
@@ -213,11 +213,11 @@
       .module { border-color: #aaa; }
     }
   </style>
-</head>
+<link rel="stylesheet" href="assets/v2.css"></head>
 <body>
   <a class="skip-link" href="#content">Bỏ qua điều hướng</a>
   <header class="topbar">
-    <div class="brand"><span class="brand-mark">DE</span><span>FastTrack DE01 Learning Hub</span></div>
+    <div class="brand"><span class="brand-mark">DE</span><span>FastTrack DE01 Learning Hub V2</span></div>
     <label class="search"><input id="search" type="search" placeholder="Tìm: watermark, SCD, Spark, Airflow..." aria-label="Tìm trong khóa học"></label>
     <div class="toolbar">
       <button class="icon-btn print" id="print" title="In hoặc lưu PDF">In</button>
@@ -226,11 +226,12 @@
   </header>
 
   <section class="hero">
-    <p class="eyebrow">Data Engineering · Foundation</p>
+    <p class="eyebrow">Learning Hub V2 · Python &amp; Data Engineering</p>
     <h1>Từ dữ liệu thô đến quyết định đáng tin.</h1>
-    <p class="hero-copy">Bản đồ học tập 18 buổi: nền tảng phần mềm, data warehouse, xử lý phân tán, Azure, vận hành production và một capstone end-to-end.</p>
+    <p class="hero-copy">Bắt đầu từ Python cơ bản, hiểu từng bước xử lý dữ liệu rồi tiến tới một pipeline hoàn chỉnh. 18 học phần có từ vựng, ví dụ từng bước và 436 câu hỏi kèm giải thích đáp án đúng.</p>
     <div class="hero-actions">
-      <a class="button primary" href="#unit-1">Bắt đầu học →</a>
+      <a class="button primary" href="#beginner-path">Tôi mới bắt đầu →</a>
+      <a class="button" href="question-bank.html">Câu hỏi &amp; lời giải</a>
       <a class="button" href="lessons/unit-01.html">Mở bài học chi tiết đầu tiên</a>
       <a class="button" href="quiz.html">Vào chế độ kiểm tra</a>
       <a class="button" href="progress.html">Kết quả &amp; thống kê</a>
@@ -238,13 +239,14 @@
     </div>
     <div class="stats">
       <div class="stat"><strong>18</strong><span>Unit từ nền tảng đến capstone</span></div>
-      <div class="stat"><strong>6</strong><span>Chặng kiến thức liên kết</span></div>
+      <div class="stat"><strong>436</strong><span>Câu hỏi có giải thích đáp án đúng</span></div>
       <div class="stat"><strong>1</strong><span>Case study e-commerce xuyên suốt</span></div>
       <div class="stat"><strong id="progressText">0/18</strong><span>Tiến độ trên thiết bị này</span><div class="progress-track"><div class="progress-fill" id="progressFill"></div></div></div>
     </div>
   </section>
 
   <section class="roadmap-wrap" aria-labelledby="roadmap-title">
+    <section class="start-path" id="beginner-path"><h2>Mới học Python và DE? Đi theo đường này</h2><p>Mỗi bài bắt đầu bằng từ vựng và một ví dụ nhỏ. Hãy tự tính kết quả trước khi chạy code, rồi đọc phần chuyên sâu khi đã hiểu ví dụ.</p><ol><li><a href="lessons/unit-02.html#beginner-start">1. Biến, hàm và dữ liệu Python</a><p>List, dict, set, class và xử lý lỗi.</p></li><li><a href="lessons/unit-03.html#beginner-start">2. Đọc bảng và hiểu JOIN</a><p>Grain, key, WHERE và GROUP BY.</p></li><li><a href="lessons/unit-06.html#pandas-first-lab">3. pandas và đối soát</a><p>Merge, null, chunk, NumPy và count.</p></li><li><a href="etl-coach.html">4. Thực hành một pipeline</a><p>Áp dụng mô hình, test và recovery.</p></li></ol><p>Học đầy đủ khóa: <a href="#unit-1">bắt đầu Unit 01</a>. Ôn bằng câu hỏi: <a href="question-bank.html">tra cứu lời giải</a> hoặc <a href="quiz.html">làm bài kiểm tra</a>.</p></section>
     <p class="section-kicker">Learning roadmap</p>
     <h2 id="roadmap-title">Sáu chặng, một dòng tư duy</h2>
     <p class="lead">Mỗi chặng trả lời một câu hỏi khác nhau, nhưng tất cả gặp nhau ở mục tiêu: dữ liệu đúng, tìm được nguồn gốc, vận hành được và phục hồi được.</p>
@@ -446,7 +448,7 @@
   </div>
 
   <footer>
-    <p><b>FastTrack DE01 Learning Hub</b> · Lộ trình tự học Data Engineering từ nền tảng đến capstone.</p>
+    <p><b>FastTrack DE01 Learning Hub V2</b> · Lộ trình tự học Data Engineering từ nền tảng đến capstone.</p>
     <p>Tìm nhanh bằng <kbd>Ctrl</kbd> + <kbd>K</kbd> · Tiến độ và giao diện được lưu trên trình duyệt.</p>
   </footer>
 
@@ -458,7 +460,7 @@
       const empty = document.getElementById('empty');
       const progressText = document.getElementById('progressText');
       const progressFill = document.getElementById('progressFill');
-      const saved = new Set(JSON.parse(localStorage.getItem('de01-progress') || '[]'));
+      const saved = new Set(JSON.parse(localStorage.getItem('de01-v2-progress') || '[]'));
 
       modules.forEach(function (module) {
         const unit = module.id.replace('unit-', '');
@@ -489,7 +491,7 @@
       function updateProgress() {
         progressText.textContent = saved.size + '/18';
         progressFill.style.width = ((saved.size / 18) * 100) + '%';
-        localStorage.setItem('de01-progress', JSON.stringify(Array.from(saved)));
+        localStorage.setItem('de01-v2-progress', JSON.stringify(Array.from(saved)));
       }
 
       document.addEventListener('click', function (event) {
@@ -528,11 +530,11 @@
 
       document.getElementById('print').addEventListener('click', function () { window.print(); });
       const root = document.documentElement;
-      const storedTheme = localStorage.getItem('de01-theme');
+      const storedTheme = localStorage.getItem('de01-v2-theme');
       if (storedTheme) root.dataset.theme = storedTheme;
       document.getElementById('theme').addEventListener('click', function () {
         root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
-        localStorage.setItem('de01-theme', root.dataset.theme);
+        localStorage.setItem('de01-v2-theme', root.dataset.theme);
       });
 
       const observer = new IntersectionObserver(function (entries) {

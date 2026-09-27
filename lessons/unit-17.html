@@ -1,8 +1,30 @@
 <!doctype html>
-<html lang="vi" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="DE01 Unit 17: Capstone: End-to-End Analytics Pipeline"><title>DE01 · 17 · Capstone: End-to-End Analytics Pipeline</title><link rel="stylesheet" href="../assets/lesson.css"></head>
+<html lang="vi" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="DE01 Unit 17: Capstone: End-to-End Analytics Pipeline"><title>DE01 · 17 · Capstone: End-to-End Analytics Pipeline</title><link rel="stylesheet" href="../assets/lesson.css"><link rel="stylesheet" href="../assets/v2.css"></head>
 <body data-unit="17"><header class="topbar"><a class="back" href="../index.html">← Learning Hub</a><span class="top-title">Unit 17 · Capstone: End-to-End Analytics Pipeline</span><div class="tools"><button class="print" id="print">In</button><button id="theme" aria-label="Đổi giao diện">◐</button></div></header>
 <section class="lesson-hero"><div class="lesson-hero-inner"><div class="unit">DE01 · Unit 17 / 18</div><h1>Capstone: End-to-End Analytics Pipeline</h1><p>Gom mọi mảnh thành một lát cắt nhỏ nhưng chạy, test và demo được.</p><div class="lesson-meta"><span class="pill">Capstone</span><span class="pill">Architecture</span><span class="pill">Reliability</span><span class="pill">Demo</span><a class="pill" href="../etl-coach.html">Mở ETL Pipeline Coach →</a></div></div><div class="progress-wrap"><div class="progress-track"><div class="progress-fill" id="courseProgress"></div></div><button class="done-btn" id="doneButton">○ Đánh dấu đã học</button></div></section>
-<div class="page"><aside class="toc"><p class="toc-title">Trong bài này</p><nav id="tocNav"></nav></aside><main class="content"><h2 id="1-muc-tieu-capstone">1. Mục tiêu capstone</h2>
+<div class="page"><aside class="toc"><p class="toc-title">Trong bài này</p><nav id="tocNav"></nav></aside><main class="content">
+<section class="beginner-guide" aria-labelledby="beginner-start">
+<p class="guide-label">V2 · Bắt đầu từ đây</p>
+<h2 id="beginner-start">Capstone là một luồng nhỏ chạy được từ đầu đến cuối</h2>
+<p>Hãy xây pipeline doanh thu từ một file orders trước khi mở rộng nhiều nguồn. Mục tiêu là giải thích được input, rule, output, cách kiểm chứng và cách phục hồi. Một luồng nhỏ có evidence giúp học tốt hơn một sơ đồ nhiều dịch vụ chưa chạy.</p>
+<h3 id="beginner-vocabulary">Từ vựng trước khi đọc tiếp</h3>
+<dl><dt>Scope</dt><dd>Phạm vi bạn cam kết làm được, ví dụ daily sales cho một nguồn.</dd>
+<dt>Acceptance criterion</dt><dd>Điều kiện đo được để xác nhận yêu cầu đã đạt.</dd>
+<dt>Failure drill</dt><dd>Cố ý gây lỗi để kiểm tra cảnh báo và recovery.</dd>
+<dt>Reconciliation matrix</dt><dd>Các phép đối soát giữa source và các tầng dữ liệu.</dd></dl>
+<h3 id="beginner-example">Đọc ví dụ theo từng bước</h3>
+<ol><li>Dùng dataset có hợp lệ, null, duplicate và late record với expected results.</li><li>Lưu raw, tạo curated, xây fact đúng grain và query report.</li><li>Rerun cùng input, làm lỗi một bước, recovery rồi đo count/totals trước và sau.</li></ol>
+<pre><code>Input 10.000
+  ├─ rejected 300 (có reason)
+  └─ valid 9.700
+       ├─ duplicates removed 200
+       └─ curated 9.500 → business aggregates</code></pre>
+<p><strong>Kết quả và cách hiểu:</strong> Đây là một acceptance example, không phải quy tắc bắt buộc mọi pipeline có cùng count. Khi aggregate làm số dòng giảm, phải đối soát measure/key theo grain mới.</p>
+<p class="guide-caution"><strong>Dễ nhầm:</strong> Job chạy một lần chưa chứng minh idempotency hoặc recovery. Giữ artifact của lần đầu, rerun và so sánh invariants bằng số liệu.</p>
+<details><summary>Tự kiểm tra: Một demo 10 phút cần evidence gì?</summary><p>Query output, test result, count/totals, một rerun không trùng và một recovery có log. Nêu limitation thật và bước tiếp theo có tiêu chí thành công.</p></details>
+<p><a href="#practice-cases">Ôn các tình huống áp dụng trong bài ↓</a> · <a href="../question-bank.html?unit=17">Xem câu hỏi và lời giải của unit</a></p>
+</section>
+<h2 id="1-muc-tieu-capstone">1. Mục tiêu capstone</h2>
 <p>Xây một lát cắt end-to-end đủ nhỏ để hoàn thành nhưng thể hiện được năng lực: ingest, storage, transform, model, orchestration, quality, security, monitoring, CI/CD và báo cáo.</p>
 <p>Đề bài gợi ý: pipeline analytics e-commerce trả lời:</p>
 <ul>
@@ -171,5 +193,8 @@ Silver sum(item gross)
 <li><strong>Nếu dashboard sai, bắt đầu ở đâu?</strong> Xác nhận scope rồi trace control totals theo lineage.</li>
 <li><strong>Nếu volume tăng 10 lần?</strong> Đưa measurement/bottleneck dự kiến và scale path, không chỉ nói &quot;Spark scale&quot;.</li>
 <li><strong>Nếu xóa dữ liệu customer?</strong> Trình bày governance policy qua raw/derived/report/backup.</li>
-</ol></main></div>
-<nav class="lesson-nav"><a href="unit-16.html"><small>← Bài trước</small><b>DataOps &amp; CI/CD for Data Pipelines</b></a><a class="next" href="unit-18.html"><small>Bài tiếp →</small><b>Final Review, Report &amp; Q&amp;A</b></a></nav><footer>FastTrack DE01 Learning Hub · Unit 17 / 18</footer><script src="../assets/lesson.js"></script></body></html>
+</ol><section class="practice-cases"><h2 id="practice-cases">Vận dụng: hiểu lý do trước khi chọn đáp án</h2>
+<p>Đọc tình huống, tự giải thích bằng lời của bạn rồi đối chiếu lời giải. Câu hỏi tiếng Anh giữ các thuật ngữ chuyên môn; phần giải thích dùng tiếng Việt.</p>
+<p>Một demo 10 phút cần evidence gì?</p><details><summary>Xem cách giải thích</summary><p>Query output, test result, count/totals, một rerun không trùng và một recovery có log. Nêu limitation thật và bước tiếp theo có tiêu chí thành công.</p></details>
+<p><a href="../quiz.html?mode=lesson&amp;unit=17">Làm toàn bộ quiz Unit 17 →</a></p></section></main></div>
+<nav class="lesson-nav"><a href="unit-16.html"><small>← Bài trước</small><b>DataOps &amp; CI/CD for Data Pipelines</b></a><a class="next" href="unit-18.html"><small>Bài tiếp →</small><b>Final Review, Report &amp; Q&amp;A</b></a></nav><footer>FastTrack DE01 Learning Hub V2 · Unit 17 / 18</footer><script src="../assets/lesson.js"></script></body></html>

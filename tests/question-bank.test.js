@@ -29,7 +29,7 @@ for (const question of bank) {
 assert.deepStrictEqual(brokenReferences, [], brokenReferences.join('\n'));
 
 for (let unit = 1; unit <= 18; unit += 1) {
-  assert.strictEqual(coverage.get(unit), 20, 'Question coverage mismatch for unit ' + unit);
+  assert.ok(coverage.get(unit) >= 20, 'Missing original questions for unit ' + unit);
   const difficulties = new Set(loader.forLesson(unit).map(function (question) { return question.difficulty; }));
   assert.deepStrictEqual(Array.from(difficulties).sort(), ['applied', 'basic', 'intermediate'], 'Difficulty coverage mismatch for unit ' + unit);
 }

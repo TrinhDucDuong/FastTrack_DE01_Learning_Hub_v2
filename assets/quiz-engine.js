@@ -14,6 +14,7 @@
       id: 'attempt-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
       mode: config.mode,
       unit: config.unit || null,
+      practiceSet: config.practiceSet || null,
       sourceAttemptId: config.sourceAttemptId || null,
       questionIds: questions.map(function (question) { return question.id; }),
       currentIndex: 0,

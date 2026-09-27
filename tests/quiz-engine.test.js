@@ -5,8 +5,8 @@ const bank = require('../assets/question-bank.js');
 
 const validation = loader.validateBank();
 assert.strictEqual(validation.valid, true, validation.errors.join('\n'));
-assert.strictEqual(bank.length, 360, 'Question bank should have twenty questions per unit.');
-for (let unit = 1; unit <= 18; unit += 1) assert.strictEqual(loader.forLesson(unit).length, 20);
+assert.strictEqual(bank.length, 436, '360 original questions plus 76 practice questions.');
+for (let unit = 1; unit <= 18; unit += 1) assert.ok(loader.forLesson(unit).length >= 20);
 function seeded(seed) {
   let value = seed;
   return function () { value = (value * 1664525 + 1013904223) % 4294967296; return value / 4294967296; };
@@ -23,7 +23,7 @@ const examCoverage = examA.reduce(function (counts, question) {
 assert.ok(Math.max.apply(null, Object.values(examCoverage)) - Math.min.apply(null, Object.values(examCoverage)) <= 1, 'Exam sampling should be balanced across units.');
 assert.strictEqual(loader.forExam({ count: 999 }).length, bank.length);
 
-const questions = loader.forLesson(1);
+const questions = loader.forLesson(1).filter(q => q.id.startsWith('u01-'));
 const attempt = engine.createAttempt({ mode: 'lesson', unit: 1 }, questions);
 assert.strictEqual(attempt.questionIds.length, 20);
 assert.strictEqual(engine.isComplete(attempt), false);

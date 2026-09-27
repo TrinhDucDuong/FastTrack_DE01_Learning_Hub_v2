@@ -30,15 +30,15 @@
   const list = document.getElementById('historyList');
   list.innerHTML = history.length ? history.map(function (attempt) {
     const incorrect = attempt.items.filter(function (item) { return !item.correct; }).length;
-    const label = attempt.mode === 'exam' ? 'Full-course exam · ' + attempt.total + ' câu' : attempt.mode === 'retry' ? 'Retry câu sai' : 'Quiz Unit ' + String(attempt.unit).padStart(2, '0');
+    const label = attempt.mode === 'practice' ? 'Bộ luyện tập ' + attempt.practiceSet : attempt.mode === 'exam' ? 'Full-course exam · ' + attempt.total + ' câu' : attempt.mode === 'retry' ? 'Retry câu sai' : 'Quiz Unit ' + String(attempt.unit).padStart(2, '0');
     const retry = incorrect ? '<a href="quiz.html?mode=retry&attempt=' + encodeURIComponent(attempt.id) + '">Làm lại ' + incorrect + ' câu sai →</a>' : '<span>Không có câu sai</span>';
     return '<article class="history-item"><div><b>' + label + '</b><span>' + new Date(attempt.submittedAt).toLocaleString('vi-VN') + '</span></div><strong>' + attempt.percentage + '%</strong>' + retry + '</article>';
   }).join('') : '<div class="empty-state">Chưa có kết quả. Hãy làm quiz ở một lesson hoặc thi thử toàn khóa.</div>';
 
-  const storedTheme = localStorage.getItem('de01-theme');
+  const storedTheme = localStorage.getItem('de01-v2-theme');
   if (storedTheme) root.dataset.theme = storedTheme;
   document.getElementById('theme').addEventListener('click', function () {
     root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
-    localStorage.setItem('de01-theme', root.dataset.theme);
+    localStorage.setItem('de01-v2-theme', root.dataset.theme);
   });
 }());

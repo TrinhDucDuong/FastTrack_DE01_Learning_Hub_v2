@@ -1,8 +1,78 @@
 <!doctype html>
-<html lang="vi" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="DE01 Unit 2: Python for Application Development"><title>DE01 · 02 · Python for Application Development</title><link rel="stylesheet" href="../assets/lesson.css"></head>
+<html lang="vi" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="DE01 Unit 2: Python for Application Development"><title>DE01 · 02 · Python for Application Development</title><link rel="stylesheet" href="../assets/lesson.css"><link rel="stylesheet" href="../assets/v2.css"></head>
 <body data-unit="2"><header class="topbar"><a class="back" href="../index.html">← Learning Hub</a><span class="top-title">Unit 02 · Python for Application Development</span><div class="tools"><button class="print" id="print">In</button><button id="theme" aria-label="Đổi giao diện">◐</button></div></header>
 <section class="lesson-hero"><div class="lesson-hero-inner"><div class="unit">DE01 · Unit 02 / 18</div><h1>Python for Application Development</h1><p>Viết ứng dụng module hóa, quản lý dependency, lỗi và resource đúng cách.</p><div class="lesson-meta"><span class="pill">Python</span><span class="pill">Typing</span><span class="pill">Exceptions</span><span class="pill">Testing</span></div></div><div class="progress-wrap"><div class="progress-track"><div class="progress-fill" id="courseProgress"></div></div><button class="done-btn" id="doneButton">○ Đánh dấu đã học</button></div></section>
 <div class="page"><aside class="toc"><p class="toc-title">Trong bài này</p><nav id="tocNav"></nav></aside><main class="content">
+<section class="beginner-guide" aria-labelledby="beginner-start">
+<p class="guide-label">V2 · Bắt đầu từ đây</p>
+<h2 id="beginner-start">Bắt đầu từ biến, kiểu dữ liệu và hàm</h2>
+<p>Python đọc chương trình theo thứ tự. Biến là tên tham chiếu một giá trị; phép gán dùng =, phép so sánh bằng dùng ==. Dấu thụt đầu dòng xác định phần thân if, for và def. Đừng vội dùng async hay nhiều class: trước hết hãy viết một hàm nhận dữ liệu và trả về kết quả có thể kiểm tra.</p>
+<h3 id="beginner-vocabulary">Từ vựng trước khi đọc tiếp</h3>
+<dl><dt>int / float / str / bool</dt><dd>Số nguyên, số thực, chuỗi và giá trị True/False. Chuỗi '2' khác số 2.</dd>
+<dt>list / dict / set</dt><dd>List giữ dãy phần tử; dict tra giá trị theo khóa; set giữ giá trị duy nhất để kiểm tra membership.</dd>
+<dt>None</dt><dd>Không có giá trị; khác 0 và chuỗi rỗng. Quy tắc xử lý phụ thuộc nghiệp vụ.</dd>
+<dt>Function / class</dt><dd>Hàm đóng gói một thao tác. Class gắn trạng thái và các thao tác liên quan vào một đối tượng.</dd></dl>
+<h3 id="beginner-example">Đọc ví dụ theo từng bước</h3>
+<ol><li>Tạo file lesson.py, nhập ví dụ rồi chạy python lesson.py trong terminal.</li><li>Đọc quantity=2 và unit_price=50 là input; return là giá trị hàm trả về cho caller.</li><li>Thử quantity=-1 để thấy ValueError. Thử đổi '2' thành 2 để phân biệt text và số.</li></ol>
+<pre><code>def line_total(quantity, unit_price):
+    if quantity &lt; 0:
+        raise ValueError(&quot;quantity must be non-negative&quot;)
+    return quantity * unit_price
+
+order = {&quot;customer_id&quot;: &quot;C100&quot;, &quot;quantity&quot;: 2}
+processed_ids = {&quot;C100&quot;, &quot;C200&quot;}
+print(line_total(order[&quot;quantity&quot;], 50))
+print(order[&quot;customer_id&quot;] in processed_ids)</code></pre>
+<p><strong>Kết quả và cách hiểu:</strong> In ra 100 và True. order['quantity'] lấy giá trị theo khóa từ dict; in kiểm tra thành viên set. Hàm không cần biết dữ liệu đến từ CSV hay API nên dễ tái sử dụng.</p>
+<p class="guide-caution"><strong>Dễ nhầm:</strong> Type hint không tự chặn kiểu sai ở runtime. Tách việc đọc file (I/O) khỏi hàm tính toán giúp test logic mà không cần chuẩn bị file thật.</p>
+<details><summary>Tự kiểm tra: Nên dùng cấu trúc gì nếu chỉ cần kiểm tra một ID trong hai triệu ID đã xử lý?</summary><p>set vì truy vấn in có thời gian trung bình O(1); không cần dict nếu không có giá trị đi kèm. Vẫn phải kiểm tra lượng RAM mà tập lớn này sử dụng.</p></details>
+<p><a href="#practice-cases">Ôn các tình huống áp dụng trong bài ↓</a> · <a href="../question-bank.html?unit=2">Xem câu hỏi và lời giải của unit</a></p>
+</section>
+<section class="beginner-guide"><h2 id="python-first-lab">Lab Python: hàm, class, exception và file</h2>
+<p>Tạo file practice.py và chạy python practice.py. Ví dụ này dùng thư viện chuẩn; print hiển thị ra màn hình, return trả kết quả về nơi gọi.</p>
+<pre><code>amounts = [100, -20, 80]
+valid = []
+for amount in amounts:
+    if amount &gt;= 0:
+        valid.append(amount)
+print(valid)       # [100, 80]
+print(sum(valid))  # 180</code></pre>
+<p>for lấy từng phần tử; if giữ giá trị không âm; append thêm vào list. Pipeline thật cần lưu cả lý do loại -20, thay vì chỉ làm nó biến mất.</p>
+<h3 id="python-class">Khi trạng thái đi cùng hành vi</h3>
+<pre><code>class BatchSummary:
+    def __init__(self):
+        self.accepted = 0
+        self.rejected = 0
+
+    def record(self, is_valid):
+        if is_valid:
+            self.accepted += 1
+        else:
+            self.rejected += 1
+
+summary = BatchSummary()
+summary.record(True)
+summary.record(False)
+print(summary.accepted, summary.rejected)  # 1 1</code></pre>
+<p>__init__ khởi tạo trạng thái; self là instance đang được xử lý. Mỗi instance có bộ đếm riêng. Một phép tính độc lập vẫn có thể chỉ là hàm, không cần class hay kế thừa.</p>
+<h3 id="python-cleanup">Exception và finally</h3>
+<pre><code>try:
+    amount = int("abc")
+except ValueError:
+    print("amount không phải số nguyên")
+finally:
+    print("đã kết thúc bước parse")</code></pre>
+<p>Kết quả có cả hai dòng. Đổi "abc" thành "12" thì không vào except nhưng vẫn in finally. Trong luồng thông thường finally chạy khi rời try; điều đó không bảo đảm cleanup khi process bị kill hoặc máy mất điện. Với file, ưu tiên with để quản lý đóng tài nguyên.</p>
+<pre><code>import csv
+import io
+
+text = "order_id,amount\nO1,100\nO2,80\n"
+with io.StringIO(text) as stream:
+    rows = list(csv.DictReader(stream))
+print(rows[0]["amount"])       # '100': chuỗi
+print(int(rows[0]["amount"]))  # 100: số nguyên</code></pre>
+<p>StringIO cho ví dụ chạy không cần file. Với file thật dùng with open("orders.csv", newline="", encoding="utf-8") as stream. File lớn nên lặp từng dòng thay vì list toàn bộ.</p>
+<p>Đọc thêm: <a href="https://docs.python.org/3/tutorial/index.html">Python Tutorial</a>.</p></section>
 <h2 id="1-project-va-dependency">1. Project và dependency</h2>
 <pre><code>python -m venv .venv
 .\.venv\Scripts\Activate.ps1
@@ -77,6 +147,9 @@ def net_amount(quantity: int, price: Decimal, discount: Decimal) -&gt; Decimal:
 <h2 id="9-dependency-injection-bang-vi-du">9. Dependency injection bằng ví dụ</h2>
 <pre><code>from typing import Protocol
 
+class OrderNotFound(Exception):
+    pass
+
 class OrderRepository(Protocol):
     def get(self, order_id: int) -&gt; dict | None: ...
 
@@ -118,5 +191,12 @@ with httpx.Client(timeout=timeout) as client:
 <li><strong>Vì sao không tạo DB connection cho từng query?</strong> Tốn handshake và dễ cạn connection; dùng pool theo lifecycle.</li>
 <li><strong>Khi nào async có lợi?</strong> Nhiều tác vụ I/O chờ đợi và thư viện toàn tuyến hỗ trợ non-blocking.</li>
 <li><strong>Vì sao business logic nên gần pure function?</strong> Dễ hiểu, test nhanh và không phụ thuộc môi trường.</li>
-</ol></main></div>
-<nav class="lesson-nav"><a href="unit-01.html"><small>← Bài trước</small><b>Version Control with Git</b></a><a class="next" href="unit-03.html"><small>Bài tiếp →</small><b>Relational Databases &amp; Advanced SQL</b></a></nav><footer>FastTrack DE01 Learning Hub · Unit 02 / 18</footer><script src="../assets/lesson.js"></script></body></html>
+</ol><section class="practice-cases"><h2 id="practice-cases">Vận dụng: hiểu lý do trước khi chọn đáp án</h2>
+<p>Đọc tình huống, tự giải thích bằng lời của bạn rồi đối chiếu lời giải. Câu hỏi tiếng Anh giữ các thuật ngữ chuyên môn; phần giải thích dùng tiếng Việt.</p>
+<article class="case-card"><h3 id="practice-2-s1-q01">Tổ chức project Python</h3><p lang="en">Which project organization best supports maintainability and reproducibility?</p><details><summary>Xem đáp án đúng và cách suy luận</summary><p><strong>Separate reusable code into modules, record dependencies, and provide clear run instructions</strong></p><p>Module gom các hàm cùng trách nhiệm để tái sử dụng mà không copy. Ghi dependency và hướng dẫn chạy giúp máy khác tái tạo môi trường. Ví dụ extract.py đọc nguồn, transform.py làm sạch, load.py ghi kết quả, tests/ kiểm tra hành vi.</p></details></article>
+<article class="case-card"><h3 id="practice-2-s1-q02">Khi nào nên tạo class?</h3><p lang="en">When is using a class most justified in a small Python data application?</p><details><summary>Xem đáp án đúng và cách suy luận</summary><p><strong>When related state and behavior should be organized together and reused</strong></p><p>Class hợp lý khi trạng thái và hành vi liên quan cần đi cùng nhau. Ví dụ BatchSummary giữ accepted/rejected và có phương thức ghi nhận kết quả. Một phép tính độc lập như tính thành tiền vẫn có thể chỉ là hàm; class không bắt buộc phải có kế thừa.</p></details></article>
+<article class="case-card"><h3 id="practice-2-s1-q06">Tách hàm 200 dòng</h3><p lang="en">A data script has one 200-line function that reads a file, cleans values, validates rows, writes output, and updates counters stored in global variables. Which refactoring best matches the course expectations?</p><details><summary>Xem đáp án đúng và cách suy luận</summary><p><strong>Split the work into small functions with clear parameters and return values, minimizing shared global state</strong></p><p>Tách đọc, biến đổi, kiểm tra và ghi thành các hàm có input/output rõ giúp kiểm thử từng bước. Trả summary thay vì sửa nhiều biến global giúp lượt chạy này không ảnh hưởng lượt khác. Bắt đầu với hàm nhỏ trước khi thêm abstraction phức tạp.</p></details></article>
+<article class="case-card"><h3 id="practice-2-s1-q07">finally dùng để làm gì?</h3><p lang="en">In Python, when does a finally block execute?</p><details><summary>Xem đáp án đúng và cách suy luận</summary><p><strong>Whether an exception occurs or not</strong></p><p>Trong luồng thực thi Python thông thường, finally chạy khi rời khối try dù có exception hay không. Vì vậy có thể đặt cleanup vào đó; với file nên ưu tiên with. Không hiểu điều này như bảo đảm chạy khi tiến trình bị hệ điều hành kill hoặc máy mất điện.</p></details></article>
+<article class="case-card"><h3 id="practice-2-s1-q08">Kiểm tra membership bằng set</h3><p lang="en">You must repeatedly check whether each incoming customer_id already exists among 2 million processed IDs. You only need membership checks, not values associated with each ID. Which Python structure is most appropriate?</p><details><summary>Xem đáp án đúng và cách suy luận</summary><p><strong>set</strong></p><p>set lưu phần tử duy nhất và hỗ trợ phép kiểm tra in trung bình O(1) nhờ hashing. Khi chỉ cần biết customer_id đã xuất hiện chưa, set thể hiện đúng nhu cầu. Với 2 triệu ID vẫn phải tính chi phí RAM; O(1) là trung bình, không phải bảo đảm mọi trường hợp.</p></details></article>
+<p><a href="../quiz.html?mode=lesson&amp;unit=2">Làm toàn bộ quiz Unit 2 →</a></p></section></main></div>
+<nav class="lesson-nav"><a href="unit-01.html"><small>← Bài trước</small><b>Version Control with Git</b></a><a class="next" href="unit-03.html"><small>Bài tiếp →</small><b>Relational Databases &amp; Advanced SQL</b></a></nav><footer>FastTrack DE01 Learning Hub V2 · Unit 02 / 18</footer><script src="../assets/lesson.js"></script></body></html>

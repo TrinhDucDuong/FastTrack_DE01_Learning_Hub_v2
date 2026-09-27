@@ -1,7 +1,10 @@
 (function (root, factory) {
-  const bank = factory(
+  const originalBank = factory(
     typeof module === 'object' && module.exports ? require('./question-bank-extra.js') : root.DE01_EXTRA_QUESTIONS
   );
+  const practice = typeof module === 'object' && module.exports ? require('./practice-bank.js') : root.DE01_PRACTICE_BANK;
+  if (!Array.isArray(practice)) throw new Error('Practice bank could not be loaded.');
+  const bank = originalBank.concat(practice);
   if (typeof module === 'object' && module.exports) module.exports = bank;
   else root.DE01_QUESTION_BANK = bank;
 }(typeof globalThis !== 'undefined' ? globalThis : this, function (extraQuestions) {

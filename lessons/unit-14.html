@@ -1,8 +1,31 @@
 <!doctype html>
-<html lang="vi" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="DE01 Unit 14: Advanced Orchestration with Airflow"><title>DE01 · 14 · Advanced Orchestration with Airflow</title><link rel="stylesheet" href="../assets/lesson.css"></head>
+<html lang="vi" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="DE01 Unit 14: Advanced Orchestration with Airflow"><title>DE01 · 14 · Advanced Orchestration with Airflow</title><link rel="stylesheet" href="../assets/lesson.css"><link rel="stylesheet" href="../assets/v2.css"></head>
 <body data-unit="14"><header class="topbar"><a class="back" href="../index.html">← Learning Hub</a><span class="top-title">Unit 14 · Advanced Orchestration with Airflow</span><div class="tools"><button class="print" id="print">In</button><button id="theme" aria-label="Đổi giao diện">◐</button></div></header>
 <section class="lesson-hero"><div class="lesson-hero-inner"><div class="unit">DE01 · Unit 14 / 18</div><h1>Advanced Orchestration with Airflow</h1><p>Biến dependency, schedule, retry và backfill thành workflow-as-code.</p><div class="lesson-meta"><span class="pill">Airflow</span><span class="pill">DAG</span><span class="pill">Data Interval</span><span class="pill">Backfill</span></div></div><div class="progress-wrap"><div class="progress-track"><div class="progress-fill" id="courseProgress"></div></div><button class="done-btn" id="doneButton">○ Đánh dấu đã học</button></div></section>
-<div class="page"><aside class="toc"><p class="toc-title">Trong bài này</p><nav id="tocNav"></nav></aside><main class="content"><h2 id="1-airflow-lam-gi">1. Airflow làm gì?</h2>
+<div class="page"><aside class="toc"><p class="toc-title">Trong bài này</p><nav id="tocNav"></nav></aside><main class="content">
+<section class="beginner-guide" aria-labelledby="beginner-start">
+<p class="guide-label">V2 · Bắt đầu từ đây</p>
+<h2 id="beginner-start">Airflow sắp xếp công việc theo dependency</h2>
+<p>Airflow điều phối task. Nó không thay pandas/Spark làm mọi phép tính. DAG là đồ thị công việc không có vòng phụ thuộc. Hãy bắt đầu bằng extract → validate → load, rồi mới học trigger rule, retry và backfill.</p>
+<h3 id="beginner-vocabulary">Từ vựng trước khi đọc tiếp</h3>
+<dl><dt>Task / task instance</dt><dd>Task là định nghĩa công việc; instance là lần thực thi trong một run.</dd>
+<dt>Data interval</dt><dd>Khoảng dữ liệu logic run phải xử lý.</dd>
+<dt>Backfill</dt><dd>Xử lý có chủ đích các khoảng lịch sử.</dd>
+<dt>XCom</dt><dd>Trao metadata nhỏ giữa task, ví dụ đường dẫn file.</dd></dl>
+<h3 id="beginner-example">Đọc ví dụ theo từng bước</h3>
+<ol><li>Task extract ghi file và trả manifest URI.</li><li>Validate đọc file từ URI, kiểm tra và trả trạng thái/summary.</li><li>Load chỉ chạy theo dependency và trigger rule; dữ liệu lớn đi qua storage.</li></ol>
+<pre><code># Minh họa dependency, giả sử ba task đã được khai báo:
+extract &gt;&gt; validate &gt;&gt; load
+
+# Một run lịch sử xử lý dữ liệu theo interval được truyền:
+# start = 2026-01-01 00:00
+# end   = 2026-01-02 00:00</code></pre>
+<p><strong>Kết quả và cách hiểu:</strong> Task không lấy datetime.now() để quyết định ngày nguồn khi backfill. Cùng interval phải chọn cùng phạm vi dữ liệu dù thực thi vào tuần sau.</p>
+<p class="guide-caution"><strong>Dễ nhầm:</strong> Thứ tự tên file hoặc số worker không định nghĩa dependency. Nhiều worker chỉ giúp chạy song song những task đã đủ điều kiện.</p>
+<details><summary>Tự kiểm tra: Ba ngày cũ bị thiếu nhưng ngày mới đã thành công: xử lý thế nào?</summary><p>Chạy backfill/rerun đúng ba interval, kiểm soát concurrency và dùng sink idempotent. Đối soát kết quả mỗi ngày sau recovery.</p></details>
+<p><a href="#practice-cases">Ôn các tình huống áp dụng trong bài ↓</a> · <a href="../question-bank.html?unit=14">Xem câu hỏi và lời giải của unit</a></p>
+</section>
+<h2 id="1-airflow-lam-gi">1. Airflow làm gì?</h2>
 <p>Airflow xây và chạy workflow theo DAG (Directed Acyclic Graph). DAG mô tả task, dependency, schedule, retry và operational metadata. Airflow là orchestrator; không nên nhét dữ liệu lớn vào chính metadata database hoặc XCom.</p>
 <pre><code>Dag processor parses DAGs -&gt; metadata database
 Scheduler finds ready tasks -&gt; Executor -&gt; Workers run tasks
@@ -151,5 +174,10 @@ transform reads data from manifest_uri/object storage</code></pre>
 <li><strong><code>catchup=False</code> có nghĩa không backfill được?</strong> Không; vẫn có thể trigger/backfill chủ động.</li>
 <li><strong>Vì sao task quá nhỏ có hại?</strong> Scheduler/metadata/log overhead tăng và DAG khó vận hành.</li>
 <li><strong>Retry ở Airflow có thay retry HTTP client?</strong> Không hoàn toàn; task retry chạy lại toàn task, network retry xử lý call transient nhỏ với deadline.</li>
-</ol></main></div>
-<nav class="lesson-nav"><a href="unit-13.html"><small>← Bài trước</small><b>Monitoring &amp; Operations on Azure</b></a><a class="next" href="unit-15.html"><small>Bài tiếp →</small><b>Data Governance &amp; Security</b></a></nav><footer>FastTrack DE01 Learning Hub · Unit 14 / 18</footer><script src="../assets/lesson.js"></script></body></html>
+</ol><section class="practice-cases"><h2 id="practice-cases">Vận dụng: hiểu lý do trước khi chọn đáp án</h2>
+<p>Đọc tình huống, tự giải thích bằng lời của bạn rồi đối chiếu lời giải. Câu hỏi tiếng Anh giữ các thuật ngữ chuyên môn; phần giải thích dùng tiếng Việt.</p>
+<article class="case-card"><h3 id="practice-1-s6-q01">DAG là bản đồ công việc</h3><p lang="en">In Airflow, what is a DAG used to describe?</p><details><summary>Xem đáp án đúng và cách suy luận</summary><p><strong>A set of tasks and their workflow dependencies</strong></p><p>DAG mô tả task và quan hệ phụ thuộc có hướng, không tạo vòng lặp. Nếu transform phụ thuộc extract, Airflow chỉ cho transform chạy khi điều kiện upstream được thỏa. Thứ tự này đến từ dependency, không từ tên file Python.</p></details></article>
+<article class="case-card"><h3 id="practice-2-s5-q05">Backfill ba ngày bị thiếu</h3><p lang="en">A source outage caused an Airflow daily workflow to miss three historical run dates. The source is now fixed, while later dates are already successful. Which concept is most relevant to process the missed historical intervals deliberately?</p><details><summary>Xem đáp án đúng và cách suy luận</summary><p><strong>Backfill or rerun of the affected historical intervals with controlled task execution</strong></p><p>Backfill hoặc rerun chọn đúng các interval lịch sử bị lỗi để xử lý lại có chủ đích. Truyền data interval vào task, giới hạn concurrency và đảm bảo output idempotent. Không dùng ngày hiện tại cho extraction vì như vậy sẽ chạy nhầm khoảng dữ liệu.</p></details></article>
+<article class="case-card"><h3 id="practice-2-s5-q12">Thứ tự chạy task</h3><p lang="en">In Airflow, what primarily defines the execution order between dependent pipeline steps?</p><details><summary>Xem đáp án đúng và cách suy luận</summary><p><strong>Task dependencies defined in the DAG</strong></p><p>Dependency trong DAG xác định task nào phải hoàn tất trước task khác. Worker count quyết định khả năng chạy song song nhưng không thay đổi quan hệ đó. Ví dụ extract &gt;&gt; validate &gt;&gt; load khiến load chờ validation theo trigger rule.</p></details></article>
+<p><a href="../quiz.html?mode=lesson&amp;unit=14">Làm toàn bộ quiz Unit 14 →</a></p></section></main></div>
+<nav class="lesson-nav"><a href="unit-13.html"><small>← Bài trước</small><b>Monitoring &amp; Operations on Azure</b></a><a class="next" href="unit-15.html"><small>Bài tiếp →</small><b>Data Governance &amp; Security</b></a></nav><footer>FastTrack DE01 Learning Hub V2 · Unit 14 / 18</footer><script src="../assets/lesson.js"></script></body></html>

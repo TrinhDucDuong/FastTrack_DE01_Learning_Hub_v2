@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="Quiz và bài thi tổng hợp cho FastTrack DE01 Learning Hub.">
-  <title>Quiz · FastTrack DE01 Learning Hub</title>
+  <meta name="description" content="Quiz và bài thi tổng hợp cho FastTrack DE01 Learning Hub V2.">
+  <title>Quiz · FastTrack DE01 Learning Hub V2</title>
   <link rel="stylesheet" href="assets/quiz.css">
-</head>
+<link rel="stylesheet" href="assets/v2.css"></head>
 <body>
   <header class="quiz-topbar">
     <a href="index.html" class="back">← Learning Hub</a>
@@ -24,7 +24,7 @@
           <input type="hidden" name="mode" value="lesson">
           <span class="setup-number">01</span>
           <h2>Kiểm tra theo bài</h2>
-          <p>Làm đủ 20 câu của unit đã chọn, bao phủ từ khái niệm đến tình huống ứng dụng.</p>
+          <p>Làm toàn bộ câu cũ và mới của unit đã chọn. Mỗi câu có giải thích đáp án đúng và đường dẫn ôn tập.</p>
           <label for="lessonUnit">Chọn bài học</label>
           <select id="lessonUnit" name="unit" required></select>
           <button class="button primary" type="submit">Bắt đầu kiểm tra bài →</button>
@@ -35,19 +35,14 @@
           <h2>Kiểm tra toàn khóa</h2>
           <p>Câu hỏi được lấy ngẫu nhiên từ toàn bộ 18 unit và xáo trộn lại ở mỗi đề mới.</p>
           <label for="examCount">Số câu trong đề</label>
-          <select id="examCount" name="count">
-            <option value="20">20 câu</option>
-            <option value="40" selected>40 câu</option>
-            <option value="60">60 câu</option>
-            <option value="90">90 câu</option>
-            <option value="120">120 câu</option>
-            <option value="180">180 câu</option>
-            <option value="360">Toàn bộ 360 câu</option>
-          </select>
+          <input id="examCount" name="count" type="number" min="1" max="436" step="1" value="40" required aria-describedby="examCountHint">
+          <p id="examCountHint">Chọn từ 1 đến 436 câu; từ 18 câu trở lên phủ đủ 18 unit.</p>
           <button class="button primary" type="submit">Tạo đề ngẫu nhiên →</button>
         </form>
       </div>
-      <div class="setup-footer"><a href="progress.html">Xem lịch sử và chủ đề cần ôn →</a></div>
+      <section class="practice-options"><h2>Luyện theo bộ đề</h2><p>Hai bộ bài tập có giải thích tiếng Việt. Đề 1 chỉ gồm 16 câu hiện có, không phải một đề đầy đủ.</p><a class="button secondary" href="quiz.html?mode=practice&amp;set=1">Bộ 1 · 16 câu</a> <a class="button secondary" href="quiz.html?mode=practice&amp;set=2">Bộ 2 · 60 câu</a></section>
+      <div id="resumePanel" class="practice-options" hidden><h2>Bài đang làm</h2><a id="resumeLink" class="button primary">Tiếp tục bài đang làm</a></div>
+      <div class="setup-footer"><a href="question-bank.html">Tra cứu toàn bộ câu hỏi và lời giải</a> · <a href="progress.html">Lịch sử &amp; chủ đề cần ôn</a></div>
     </section>
 
     <section class="quiz-intro" id="quizIntro">
@@ -103,6 +98,7 @@
   </main>
 
   <script src="assets/question-bank-extra.js"></script>
+  <script src="assets/practice-bank.js"></script>
   <script src="assets/question-bank.js"></script>
   <script src="assets/question-loader.js"></script>
   <script src="assets/quiz-engine.js"></script>

@@ -84,5 +84,6 @@
     return copyQuestions(ids.map(function (id) { return byId.get(id); }).filter(Boolean));
   }
 
-  return { validateQuestion: validateQuestion, validateBank: validateBank, forLesson: forLesson, forExam: forExam, byIds: byIds };
+  function forPractice(set) { return copyQuestions(bank.filter(function (q) { return q.practiceSet === Number(set); })); }
+  return { validateQuestion: validateQuestion, validateBank: validateBank, forLesson: forLesson, forExam: forExam, byIds: byIds, forPractice: forPractice, total: bank.length };
 }));

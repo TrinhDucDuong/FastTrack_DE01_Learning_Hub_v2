@@ -1,8 +1,31 @@
 <!doctype html>
-<html lang="vi" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="DE01 Unit 6: Python for Data Engineering"><title>DE01 · 06 · Python for Data Engineering</title><link rel="stylesheet" href="../assets/lesson.css"></head>
+<html lang="vi" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="DE01 Unit 6: Python for Data Engineering"><title>DE01 · 06 · Python for Data Engineering</title><link rel="stylesheet" href="../assets/lesson.css"><link rel="stylesheet" href="../assets/v2.css"></head>
 <body data-unit="6"><header class="topbar"><a class="back" href="../index.html">← Learning Hub</a><span class="top-title">Unit 06 · Python for Data Engineering</span><div class="tools"><button class="print" id="print">In</button><button id="theme" aria-label="Đổi giao diện">◐</button></div></header>
 <section class="lesson-hero"><div class="lesson-hero-inner"><div class="unit">DE01 · Unit 06 / 18</div><h1>Python for Data Engineering</h1><p>Pipeline tiết kiệm bộ nhớ, rerun an toàn, test và audit được.</p><div class="lesson-meta"><span class="pill">Chunk</span><span class="pill">Watermark</span><span class="pill">Idempotency</span><span class="pill">Audit</span></div></div><div class="progress-wrap"><div class="progress-track"><div class="progress-fill" id="courseProgress"></div></div><button class="done-btn" id="doneButton">○ Đánh dấu đã học</button></div></section>
-<div class="page"><aside class="toc"><p class="toc-title">Trong bài này</p><nav id="tocNav"></nav></aside><main class="content"><h2 id="1-python-cua-data-engineer-khac-gi-script-thong-thuong">1. Python của Data Engineer khác gì script thông thường?</h2>
+<div class="page"><aside class="toc"><p class="toc-title">Trong bài này</p><nav id="tocNav"></nav></aside><main class="content">
+<section class="beginner-guide" aria-labelledby="beginner-start">
+<p class="guide-label">V2 · Bắt đầu từ đây</p>
+<h2 id="beginner-start">Một pipeline nhỏ nhưng đếm được từng dòng</h2>
+<p>DE biến dữ liệu nguồn thành dữ liệu đáng tin cho người sử dụng. Hãy nghĩ pipeline như dây chuyền có các trạm: đọc, kiểm tra, biến đổi và ghi. Mỗi trạm cần đầu vào/đầu ra rõ, số lượng đo được và cách xử lý khi lỗi. Dữ liệu bị loại vẫn cần lý do, không nên biến mất.</p>
+<h3 id="beginner-vocabulary">Từ vựng trước khi đọc tiếp</h3>
+<dl><dt>DataFrame</dt><dd>Bảng dữ liệu trong pandas; mỗi cột có tên và kiểu.</dd>
+<dt>Validation</dt><dd>Kiểm tra dữ liệu theo rule đã được thống nhất.</dd>
+<dt>Deduplication</dt><dd>Xử lý bản ghi trùng theo khóa và quy tắc chọn bản đúng.</dd>
+<dt>Reconciliation</dt><dd>Đối soát count, key và tổng giá trị giữa các bước.</dd></dl>
+<h3 id="beginner-example">Đọc ví dụ theo từng bước</h3>
+<ol><li>Đọc 10.000 row; validation reject 300 nên còn 9.700.</li><li>Dedup loại 200 row khác trong tập hợp lệ, còn 9.500.</li><li>Kiểm tra 10.000 = 300 + 200 + 9.500 và lưu rejected reasons.</li></ol>
+<pre><code>raw_count = 10_000
+rejected_count = 300
+duplicate_count = 200
+curated_count = raw_count - rejected_count - duplicate_count
+assert curated_count == 9_500
+assert raw_count == rejected_count + duplicate_count + curated_count</code></pre>
+<p><strong>Kết quả và cách hiểu:</strong> Các assert không báo lỗi vì các bucket disjoint trong ví dụ. Nếu một dòng vừa bị reject vừa tính là duplicate, phép đối soát này không còn đúng; cần thiết kế counter theo thứ tự xử lý.</p>
+<p class="guide-caution"><strong>Dễ nhầm:</strong> Null discount không mặc định là 0. Cần hỏi null là chưa biết hay không có giảm giá. CSV lớn phải đọc theo chunk và không gom toàn bộ chunk về RAM ở bước cuối.</p>
+<details><summary>Tự kiểm tra: 40 đơn khớp hai row customer C100; 960 đơn khác khớp một row. Merge ra bao nhiêu?</summary><p>960 + 40 × 2 = 1.040. Khóa phía customer trùng gây nhân bản. Dùng validate='many_to_one' để phát hiện và sửa nguồn/rule chọn version trước khi tính revenue.</p></details>
+<p><a href="#practice-cases">Ôn các tình huống áp dụng trong bài ↓</a> · <a href="../question-bank.html?unit=6">Xem câu hỏi và lời giải của unit</a></p>
+</section>
+<h2 id="1-python-cua-data-engineer-khac-gi-script-thong-thuong">1. Python của Data Engineer khác gì script thông thường?</h2>
 <p>Một pipeline tốt không chỉ &quot;chạy được&quot;. Nó phải đọc dữ liệu lớn hợp lý, có thể rerun an toàn, cấu hình được, test được, quan sát được và không làm lộ secret.</p>
 <p>Luồng cơ bản:</p>
 <pre><code>Extract -&gt; Validate -&gt; Transform -&gt; Load -&gt; Audit</code></pre>
@@ -161,5 +184,75 @@ checksum, status, started_at, completed_at</code></pre>
 <li><strong>Zero rejected rows có chắc tốt?</strong> Không; validator có thể chưa chạy hoặc rule quá lỏng.</li>
 <li><strong>Khi nào fail toàn batch?</strong> Contract/schema lõi hỏng hoặc tỷ lệ lỗi vượt policy; record lỗi cô lập có thể quarantine.</li>
 <li><strong>Watermark có thay backup không?</strong> Không; nó chỉ ghi tiến độ incremental.</li>
-</ol></main></div>
-<nav class="lesson-nav"><a href="unit-05.html"><small>← Bài trước</small><b>Data Modeling &amp; Warehousing Concepts</b></a><a class="next" href="unit-07.html"><small>Bài tiếp →</small><b>Distributed Processing with Spark &amp; PySpark</b></a></nav><footer>FastTrack DE01 Learning Hub · Unit 06 / 18</footer><script src="../assets/lesson.js"></script></body></html>
+</ol><section class="beginner-guide"><h2 id="pandas-first-lab">Lab pandas và NumPy: tự tính trước, chạy sau</h2>
+<p>Cài trong môi trường project: <code>python -m pip install pandas numpy</code>. Ví dụ tạo dữ liệu trong memory; khi ghi Parquet cần thêm engine như pyarrow.</p>
+<h3 id="merge-count-lab">Đếm row khi merge</h3>
+<pre><code>import pandas as pd
+orders = pd.DataFrame({
+    "order_id": ["O1", "O2", "O3"],
+    "customer_id": ["C100", "C100", "C200"]
+})
+customers = pd.DataFrame({
+    "customer_id": ["C100", "C100", "C200"],
+    "city": ["Ha Noi", "Da Nang", "Hue"]
+})
+joined = orders.merge(customers, on="customer_id", how="left")
+print(len(joined))  # 5 = 2 + 2 + 1
+try:
+    orders.merge(customers, on="customer_id",
+                 how="left", validate="many_to_one")
+except pd.errors.MergeError:
+    print("Khóa customer phía phải chưa duy nhất")</code></pre>
+<p>O1 và O2 mỗi đơn khớp hai row C100 nên tạo bốn row; O3 tạo một. Không tự drop_duplicates để che lỗi: hai row có thể là version lịch sử cần chọn theo event time. Xử lý null join key có chủ đích: pandas có thể khớp null với null, khác phép so sánh NULL thông thường trong SQL.</p>
+<h3 id="null-profile-lab">Profile trước khi fillna</h3>
+<pre><code>df = pd.DataFrame({
+    "order_id": ["O1", "O2", "O2"],
+    "amount": [100, 80, 80],
+    "discount": [None, 0, 0]
+})
+print(len(df))                            # 3
+print(df["order_id"].nunique())            # 2
+print(df["discount"].isna().sum())         # 1
+print(df["order_id"].duplicated().sum())   # 1</code></pre>
+<p>Null rate discount là 1/3. Chỉ fillna(0) khi xác nhận null nghĩa là không giảm giá; nếu chưa biết, giữ null và ghi trạng thái chất lượng để không khẳng định revenue đầy đủ.</p>
+<h3 id="chunk-lab">File lớn hơn RAM</h3>
+<pre><code># Mẫu dùng file thật, giả định amount hợp lệ và là số nguyên.
+total_amount = 0
+for chunk in pd.read_csv(
+    "orders.csv", usecols=["amount"],
+    dtype={"amount": "int64"}, chunksize=100_000
+):
+    total_amount += int(chunk["amount"].sum())
+print(total_amount)</code></pre>
+<p>chunksize trả DataFrame nhỏ nối tiếp, usecols giảm cột, dtype kiểm soát kiểu. Không concat mọi chunk ở cuối. Dedup toàn file cần state qua chunk hoặc database/storage trung gian; dedup riêng từng chunk bỏ sót bản sao nằm ở chunk khác.</p>
+<h3 id="numpy-lab">Vectorization trên array</h3>
+<pre><code>import numpy as np
+quantity = np.array([2, 1, 3], dtype=np.int64)
+price = np.array([50, 80, 20], dtype=np.int64)
+amount = quantity * price
+print(amount.tolist())    # [100, 80, 60]
+print(int(amount.sum()))  # 240</code></pre>
+<p>Hai array cùng vị trí mô tả cùng dòng hàng. Vectorization để thư viện tính theo phần tử bằng implementation tối ưu. Vẫn cần kiểm tra shape, dtype và overflow.</p>
+<h3 id="mapping-lab">Source-to-target mapping</h3>
+<table><thead><tr><th>Nguồn</th><th>Đích</th><th>Rule</th></tr></thead><tbody>
+<tr><td>order_no</td><td>order_id</td><td>Trim, string, không null, unique theo grain.</td></tr>
+<tr><td>amount_text</td><td>amount</td><td>Parse số; lỗi vào quarantine.</td></tr>
+<tr><td>discount</td><td>discount</td><td>Xác nhận nghĩa null trước khi fill.</td></tr>
+<tr><td>updated_at</td><td>updated_at_utc</td><td>Biết timezone nguồn rồi chuẩn hóa UTC.</td></tr>
+</tbody></table>
+<p>Đọc thêm: <a href="https://pandas.pydata.org/docs/reference/api/pandas.merge.html">pandas merge và validate</a>.</p></section>
+<section class="practice-cases"><h2 id="practice-cases">Vận dụng: hiểu lý do trước khi chọn đáp án</h2>
+<p>Đọc tình huống, tự giải thích bằng lời của bạn rồi đối chiếu lời giải. Câu hỏi tiếng Anh giữ các thuật ngữ chuyên môn; phần giải thích dùng tiếng Việt.</p>
+<article class="case-card"><h3 id="practice-1-s3-q02">Đối soát 10.000 và 9.500 dòng</h3><p lang="en">A source has 10,000 rows but the curated output has only 9,500 rows. Which check should be performed?</p><details><summary>Xem đáp án đúng và cách suy luận</summary><p><strong>Reconcile source and target row counts and investigate rejected or filtered records</strong></p><p>Chênh lệch 500 dòng chưa đủ kết luận pipeline sai hay đúng. Hãy đối chiếu cùng phạm vi dữ liệu, đếm dòng bị validation loại, filter và dedup. Nếu mỗi dòng nguồn đều có nơi đến hoặc lý do loại rõ ràng thì mới có cơ sở công bố output.</p></details></article>
+<article class="case-card"><h3 id="practice-1-s6-q04">Retry giải quyết lỗi gì?</h3><p lang="en">Why are retries useful in a data pipeline?</p><details><summary>Xem đáp án đúng và cách suy luận</summary><p><strong>They can automatically retry temporary failures</strong></p><p>Retry thử lại thao tác bị lỗi tạm thời, chẳng hạn kết nối mạng gián đoạn vài giây. Nó có ích khi nguyên nhân có thể tự hết, có giới hạn lần thử và khoảng chờ. Nếu lần ghi đầu đã thành công nhưng mất response, sink phải idempotent để retry không tạo bản sao.</p></details></article>
+<article class="case-card"><h3 id="practice-2-s1-q03">Vì sao LEFT merge thành 1.040 dòng?</h3><p lang="en">df_orders has 1,000 rows. df_customers has one row per customer_id, except customer C100 appears twice. Exactly 40 orders belong to C100. What row count results from pd.merge(df_orders, df_customers, on='customer_id', how='left')?</p><details><summary>Xem đáp án đúng và cách suy luận</summary><p><strong>1,040</strong></p><p>960 đơn của khách khác mỗi đơn khớp một dòng, tạo 960 dòng. 40 đơn của C100 mỗi đơn khớp hai dòng customer, tạo 80 dòng. Tổng là 960 + 40 × 2 = 1.040. validate='many_to_one' giúp pandas phát hiện khóa phía customer không duy nhất thay vì âm thầm nhân dòng.</p></details></article>
+<article class="case-card"><h3 id="practice-2-s1-q04">Tính output sau validate và dedup</h3><p lang="en">A raw file contains 10,000 rows. Validation rejects 300 rows, and deduplication removes another 200 duplicate rows from the valid set. What curated row count should the validation summary expect?</p><details><summary>Xem đáp án đúng và cách suy luận</summary><p><strong>9,500</strong></p><p>Validation loại 300 dòng từ 10.000, còn 9.700 dòng hợp lệ. Dedup loại thêm 200 dòng trong tập hợp lệ đó, nên curated còn 9.700 − 200 = 9.500. Hai nhóm loại không chồng lên nhau trong đề này; báo cáo nên giữ cả hai counter.</p></details></article>
+<article class="case-card"><h3 id="practice-2-s1-q05">CSV 20 GB trên máy RAM 8 GB</h3><p lang="en">A 20 GB CSV file must be processed on a machine with 8 GB RAM using pandas. Which approach is most appropriate?</p><details><summary>Xem đáp án đúng và cách suy luận</summary><p><strong>Read the file in chunks and/or restrict columns and dtypes, processing incrementally</strong></p><p>Đọc theo chunksize giúp xử lý từng phần; usecols và dtype giảm dữ liệu nạp vào bộ nhớ. CSV parse thành object có thể chiếm RAM lớn hơn dung lượng file. Không nối lại mọi chunk ở cuối; các phép dedup/aggregate toàn cục cần state hoặc lưu trữ trung gian phù hợp.</p></details></article>
+<article class="case-card"><h3 id="practice-2-s1-q09">Null không tự động bằng zero</h3><p lang="en">A sales feed contains nulls in discount_amount. What is the safest engineering response?</p><details><summary>Xem đáp án đúng và cách suy luận</summary><p><strong>Confirm the business meaning of null, apply the agreed rule, and document the treatment</strong></p><p>Null có thể là chưa biết, không áp dụng hoặc dữ liệu chưa đến. Zero khẳng định giá trị bằng không. Cần xác nhận với business rồi áp quy tắc và ghi lại, vì thay null bằng zero không đúng nghĩa sẽ làm lệch doanh thu hoặc discount.</p></details></article>
+<article class="case-card"><h3 id="practice-2-s1-q11">Xử lý record không hợp lệ</h3><p lang="en">A data job encounters invalid records that the agreed rule allows to be rejected. Which behavior is best?</p><details><summary>Xem đáp án đúng và cách suy luận</summary><p><strong>Separate rejected records, record counts/reasons, and continue processing valid records when the rule allows</strong></p><p>Khi policy cho phép tiếp tục, tách record lỗi vào quarantine cùng lý do, run_id và tham chiếu nguồn. Dòng hợp lệ vẫn được xử lý, nhưng tổng count phải đối soát được. Nếu vi phạm schema lõi hoặc vượt ngưỡng lỗi, policy có thể yêu cầu fail toàn batch.</p></details></article>
+<article class="case-card"><h3 id="practice-2-s1-q12">NumPy và vectorization</h3><p lang="en">For a large numeric array, which approach best reflects the intended use of NumPy?</p><details><summary>Xem đáp án đúng và cách suy luận</summary><p><strong>Use vectorized array operations for repeated numerical calculations</strong></p><p>Vectorization biểu diễn phép tính trên cả array như quantity * price để thư viện xử lý bằng vòng lặp tối ưu bên dưới. Cách này giảm overhead lặp từng phần tử bằng Python. Dữ liệu cần kiểu số phù hợp và phải kiểm tra shape, dtype, overflow.</p></details></article>
+<article class="case-card"><h3 id="practice-2-s3-q07">Source-to-target mapping</h3><p lang="en">What is the primary purpose of a source-to-target mapping?</p><details><summary>Xem đáp án đúng và cách suy luận</summary><p><strong>Define source fields, target fields, transformations, types, defaults, and validation rules</strong></p><p>Mapping mô tả mỗi cột đầu ra lấy từ đâu, đổi kiểu hay tính toán thế nào, có default gì và kiểm tra bằng rule nào. Ví dụ source.total_text → target.amount decimal, lỗi parse vào quarantine. Đây là hợp đồng triển khai giúp giảm suy đoán khi viết code.</p></details></article>
+<article class="case-card"><h3 id="practice-2-s3-q12">Data profiling đo gì?</h3><p lang="en">Which result set best represents a data-profiling report?</p><details><summary>Xem đáp án đúng và cách suy luận</summary><p><strong>Row counts, null rates, distinct counts, ranges, and notable value distributions</strong></p><p>Profiling mô tả dữ liệu bằng row count, null rate, distinct count, min/max và phân bố. Ví dụ customer_id lặp hay amount âm là bằng chứng để thiết kế rule. Metric CPU/RAM mô tả hệ thống chạy, không mô tả chất lượng tập dữ liệu.</p></details></article>
+<article class="case-card"><h3 id="practice-2-s5-q08">Nguồn đổi tên cột âm thầm</h3><p lang="en">A source silently renames a critical column. The pipeline still runs but begins writing nulls to the curated layer. Which control best reduces the chance of this becoming silent bad data?</p><details><summary>Xem đáp án đúng và cách suy luận</summary><p><strong>Validate the incoming schema and enforce critical-field data-quality tests so the run fails on breach</strong></p><p>Schema validation phát hiện field bắt buộc bị mất trước khi transformation tạo ra NULL. Critical-field tests ở curated là lớp kiểm tra bổ sung. Khi vi phạm contract quan trọng, fail/chặn publish để tránh dữ liệu xấu trông như một run thành công.</p></details></article>
+<p><a href="../quiz.html?mode=lesson&amp;unit=6">Làm toàn bộ quiz Unit 6 →</a></p></section></main></div>
+<nav class="lesson-nav"><a href="unit-05.html"><small>← Bài trước</small><b>Data Modeling &amp; Warehousing Concepts</b></a><a class="next" href="unit-07.html"><small>Bài tiếp →</small><b>Distributed Processing with Spark &amp; PySpark</b></a></nav><footer>FastTrack DE01 Learning Hub V2 · Unit 06 / 18</footer><script src="../assets/lesson.js"></script></body></html>

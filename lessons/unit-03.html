@@ -1,8 +1,30 @@
 <!doctype html>
-<html lang="vi" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="DE01 Unit 3: Relational Databases &amp; Advanced SQL"><title>DE01 · 03 · Relational Databases &amp; Advanced SQL</title><link rel="stylesheet" href="../assets/lesson.css"></head>
+<html lang="vi" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="DE01 Unit 3: Relational Databases &amp; Advanced SQL"><title>DE01 · 03 · Relational Databases &amp; Advanced SQL</title><link rel="stylesheet" href="../assets/lesson.css"><link rel="stylesheet" href="../assets/v2.css"></head>
 <body data-unit="3"><header class="topbar"><a class="back" href="../index.html">← Learning Hub</a><span class="top-title">Unit 03 · Relational Databases &amp; Advanced SQL</span><div class="tools"><button class="print" id="print">In</button><button id="theme" aria-label="Đổi giao diện">◐</button></div></header>
 <section class="lesson-hero"><div class="lesson-hero-inner"><div class="unit">DE01 · Unit 03 / 18</div><h1>Relational Databases &amp; Advanced SQL</h1><p>Hiểu transaction, index, execution plan và cách viết SQL phân tích.</p><div class="lesson-meta"><span class="pill">SQL</span><span class="pill">ACID</span><span class="pill">Index</span><span class="pill">Window Function</span></div></div><div class="progress-wrap"><div class="progress-track"><div class="progress-fill" id="courseProgress"></div></div><button class="done-btn" id="doneButton">○ Đánh dấu đã học</button></div></section>
-<div class="page"><aside class="toc"><p class="toc-title">Trong bài này</p><nav id="tocNav"></nav></aside><main class="content"><h2 id="1-muc-tieu">1. Mục tiêu</h2>
+<div class="page"><aside class="toc"><p class="toc-title">Trong bài này</p><nav id="tocNav"></nav></aside><main class="content">
+<section class="beginner-guide" aria-labelledby="beginner-start">
+<p class="guide-label">V2 · Bắt đầu từ đây</p>
+<h2 id="beginner-start">SQL: đọc bảng theo đúng mức chi tiết</h2>
+<p>Một bảng gồm row và column. Trước mỗi query, hãy nói một row đại diện cho điều gì. orders thường có một row mỗi đơn; order_items có một row mỗi dòng hàng trong đơn. SQL thao tác trên tập dữ liệu, vì vậy JOIN có thể làm số row tăng dù không có record mới ở nguồn.</p>
+<h3 id="beginner-vocabulary">Từ vựng trước khi đọc tiếp</h3>
+<dl><dt>Primary key / foreign key</dt><dd>Khóa chính định danh row; khóa ngoại tham chiếu row của bảng khác để bảo vệ quan hệ.</dd>
+<dt>JOIN</dt><dd>Ghép các row theo điều kiện. Một khóa gặp hai row bên phải có thể tạo hai kết quả.</dd>
+<dt>GROUP BY / SUM</dt><dd>Gom các row thành nhóm rồi tính tổng cho mỗi nhóm.</dd>
+<dt>NULL</dt><dd>Giá trị thiếu/không biết. Dùng IS NULL thay vì = NULL.</dd></dl>
+<h3 id="beginner-example">Đọc ví dụ theo từng bước</h3>
+<ol><li>WHERE giữ những đơn paid trước khi gom nhóm.</li><li>GROUP BY customer_id tạo một nhóm mỗi khách.</li><li>SUM cộng amount trong nhóm; HAVING giữ nhóm có tổng ít nhất 100.</li></ol>
+<pre><code>SELECT customer_id, SUM(amount) AS revenue
+FROM orders
+WHERE status = 'paid'
+GROUP BY customer_id
+HAVING SUM(amount) &gt;= 100;</code></pre>
+<p><strong>Kết quả và cách hiểu:</strong> Nếu C100 có hai đơn paid 60 và 50, kết quả cho C100 là 110. Đơn cancelled 200 không vào nhóm tính tổng vì đã bị WHERE loại.</p>
+<p class="guide-caution"><strong>Dễ nhầm:</strong> SUM sau một JOIN sai cardinality vẫn chạy thành công nhưng kết quả có thể bị nhân. Đếm row, đếm distinct key và đối soát measure trước/sau JOIN.</p>
+<details><summary>Tự kiểm tra: Một khách không có đơn, LEFT JOIN orders rồi WHERE orders.order_date &gt;= ngày có giữ khách đó không?</summary><p>Không. Row được bổ sung NULL ở phía orders không thỏa điều kiện WHERE. Đặt điều kiện ngày trong ON nếu muốn giữ mọi khách.</p></details>
+<p><a href="#practice-cases">Ôn các tình huống áp dụng trong bài ↓</a> · <a href="../question-bank.html?unit=3">Xem câu hỏi và lời giải của unit</a></p>
+</section>
+<h2 id="1-muc-tieu">1. Mục tiêu</h2>
 <p>Sau bài này, bạn cần thiết kế bảng OLTP cơ bản, giải thích ACID/index/query plan, viết join/aggregate/window function đúng grain và nhận diện race condition.</p>
 <h2 id="2-relational-model-va-constraint">2. Relational model và constraint</h2>
 <ul>
@@ -112,5 +134,40 @@ WHERE id = :id
 <li><strong>WHERE khác HAVING?</strong> WHERE lọc row trước grouping; HAVING lọc group sau aggregate.</li>
 <li><strong>Vì sao <code>DISTINCT</code> không phải cách sửa join tốt?</strong> Nó che sai cardinality và có thể xóa row hợp lệ, đồng thời tốn sort/hash.</li>
 <li><strong>Khi nào optimistic locking hợp lý?</strong> Conflict hiếm và không muốn giữ lock lâu.</li>
-</ol></main></div>
-<nav class="lesson-nav"><a href="unit-02.html"><small>← Bài trước</small><b>Python for Application Development</b></a><a class="next" href="unit-04.html"><small>Bài tiếp →</small><b>API Development with FastAPI</b></a></nav><footer>FastTrack DE01 Learning Hub · Unit 03 / 18</footer><script src="../assets/lesson.js"></script></body></html>
+</ol><section class="beginner-guide"><h2 id="sql-first-lab">Lab SQL: JOIN, cửa sổ và transaction</h2>
+<h3 id="sql-join-placement">Đặt filter ở ON hay WHERE?</h3>
+<pre><code>SELECT c.customer_id, o.order_id
+FROM customers AS c
+LEFT JOIN orders AS o
+  ON c.customer_id = o.customer_id
+ AND o.order_date &gt;= '2026-01-01';</code></pre>
+<p>C1 có đơn tháng 1, C2 chỉ có đơn tháng 12 và C3 chưa có đơn: cả ba vẫn xuất hiện. order_id của C2 và C3 là NULL. Đưa điều kiện ngày xuống WHERE sẽ loại hai row NULL. Hãy dự đoán kết quả từng customer trước khi chạy.</p>
+<h3 id="sql-latest-row">Giữ toàn bộ dòng mới nhất</h3>
+<pre><code>WITH ranked AS (
+  SELECT customer_id, city, updated_at, source_sequence,
+    ROW_NUMBER() OVER (
+      PARTITION BY customer_id
+      ORDER BY updated_at DESC, source_sequence DESC
+    ) AS rn
+  FROM staging_customers
+)
+SELECT customer_id, city, updated_at
+FROM ranked WHERE rn = 1;</code></pre>
+<p>PARTITION BY chia nhóm khách; ORDER BY trong OVER xác định thứ tự mỗi nhóm; rn=1 lấy bản mới nhất. Cần source_sequence có quy tắc tie-break tin cậy để timestamp trùng không tạo kết quả ngẫu nhiên.</p>
+<h3 id="sql-isolation-story">Đọc hai lần ra hai kết quả</h3>
+<table><thead><tr><th>Bước</th><th>Transaction A</th><th>Transaction B</th></tr></thead><tbody><tr><td>1</td><td>Đọc balance=100</td><td></td></tr><tr><td>2</td><td>Vẫn trong transaction</td><td>UPDATE balance=80; COMMIT</td></tr><tr><td>3</td><td>Đọc lại balance=80</td><td></td></tr></tbody></table>
+<p>Đây là non-repeatable read: A thấy hai giá trị đã commit khác nhau của cùng row. Dirty read là đọc thay đổi chưa commit; lost update là một lần ghi làm mất tác động lần ghi khác. Hành vi isolation phụ thuộc engine; PostgreSQL Read Committed dùng snapshot theo statement.</p>
+<p>Đọc thêm: <a href="https://www.postgresql.org/docs/current/transaction-iso.html">PostgreSQL transaction isolation</a>.</p></section>
+<section class="practice-cases"><h2 id="practice-cases">Vận dụng: hiểu lý do trước khi chọn đáp án</h2>
+<p>Đọc tình huống, tự giải thích bằng lời của bạn rồi đối chiếu lời giải. Câu hỏi tiếng Anh giữ các thuật ngữ chuyên môn; phần giải thích dùng tiếng Việt.</p>
+<article class="case-card"><h3 id="practice-2-s2-q01">Quan hệ đơn hàng và sản phẩm</h3><p lang="en">An order can contain many products, and a product can appear in many orders. Which relational design best represents this relationship?</p><details><summary>Xem đáp án đúng và cách suy luận</summary><p><strong>Use an order_items junction table with foreign keys to orders and products</strong></p><p>Một đơn có nhiều sản phẩm và một sản phẩm thuộc nhiều đơn là quan hệ nhiều-nhiều. Bảng order_items chứa order_id, product_id, quantity và giá bán của từng dòng, nối tới hai bảng gốc bằng foreign key. Nó cho phép ràng buộc và truy vấn từng dòng hàng rõ ràng.</p></details></article>
+<article class="case-card"><h3 id="practice-2-s2-q02">Non-repeatable read</h3><p lang="en">Inside one transaction, a query reads the same row twice and gets different values because another transaction committed an update between the two reads. Which concurrency issue is this?</p><details><summary>Xem đáp án đúng và cách suy luận</summary><p><strong>Non-repeatable read</strong></p><p>Giao dịch A đọc row có balance=100. Giao dịch B cập nhật thành 80 và commit; A đọc lại cùng row được 80. Đây là non-repeatable read vì giá trị đã commit thay đổi giữa hai lần đọc trong cùng transaction; không phải đọc dữ liệu chưa commit.</p></details></article>
+<article class="case-card"><h3 id="practice-2-s2-q04">WHERE và HAVING</h3><p lang="en">Which statement about WHERE and HAVING is correct?</p><details><summary>Xem đáp án đúng và cách suy luận</summary><p><strong>WHERE filters rows before grouping; HAVING filters groups after aggregation</strong></p><p>WHERE lọc từng dòng trước khi gom nhóm, chẳng hạn chỉ giữ đơn paid. Sau SUM theo customer, HAVING lọc những nhóm có tổng lớn hơn 1.000. Trình tự này giải thích vì sao điều kiện trên kết quả aggregate thuộc HAVING.</p></details></article>
+<article class="case-card"><h3 id="practice-2-s2-q05">Giữ nguyên dòng mới nhất</h3><p lang="en">A staging table can contain several rows per customer_id; only the row with the latest updated_at must be kept, including all of its other columns. Which SQL approach is most appropriate?</p><details><summary>Xem đáp án đúng và cách suy luận</summary><p><strong>Use ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY updated_at DESC) and keep row number 1</strong></p><p>ROW_NUMBER chia partition theo customer_id rồi đánh số theo updated_at giảm dần. Giữ rn=1 lấy được cả dòng mới nhất, bao gồm các cột đi cùng nó. Nếu timestamp bằng nhau, thêm khóa phụ như source_sequence để kết quả deterministic.</p></details></article>
+<article class="case-card"><h3 id="practice-2-s2-q06">Chuẩn hóa thông tin khách hàng</h3><p lang="en">An orders table repeats customer name, phone, and address on every order row. Which redesign best supports normalization?</p><details><summary>Xem đáp án đúng và cách suy luận</summary><p><strong>Store customer attributes in a customer table and reference it from orders using a key</strong></p><p>Lặp tên và số điện thoại trên mọi đơn khiến một thay đổi phải sửa nhiều dòng và dễ không đồng nhất. Tách customers và cho orders tham chiếu customer_id giúp quản lý thuộc tính ở một nơi. Riêng địa chỉ giao hàng của đơn tại thời điểm mua có thể là snapshot nghiệp vụ cần giữ.</p></details></article>
+<article class="case-card"><h3 id="practice-2-s2-q07">Index có chi phí</h3><p lang="en">What is the normal trade-off when adding indexes to a heavily updated OLTP table?</p><details><summary>Xem đáp án đúng và cách suy luận</summary><p><strong>Useful indexes can improve targeted reads but add storage and write-maintenance overhead</strong></p><p>Index là cấu trúc tìm kiếm phụ giúp một số query đọc ít hơn. Khi INSERT/UPDATE/DELETE, database phải duy trì index nên tăng storage và công việc ghi. Chọn index theo query thực tế, kiểm tra execution plan và đo trước/sau.</p></details></article>
+<article class="case-card"><h3 id="practice-2-s2-q08">Chuyển tiền và atomicity</h3><p lang="en">A transaction debits one account and credits another. If the system fails after the debit, the entire operation is rolled back. Which ACID property is demonstrated?</p><details><summary>Xem đáp án đúng và cách suy luận</summary><p><strong>Atomicity</strong></p><p>Debit và credit thuộc một transaction: hoặc cả hai cùng commit hoặc cùng rollback. Khi lỗi xảy ra sau debit, rollback trả lại trạng thái trước thao tác. Đây là atomicity, tức tính toàn vẹn của nhóm thao tác như một đơn vị.</p></details></article>
+<article class="case-card"><h3 id="practice-2-s2-q09">Điều tra full scan</h3><p lang="en">An execution plan for a large orders table shows a full scan for a query that filters on a selective customer_id and returns only three columns. What is the most reasonable first optimization to investigate?</p><details><summary>Xem đáp án đúng và cách suy luận</summary><p><strong>Check whether an appropriate index exists for the filter and avoid selecting unnecessary columns</strong></p><p>Nếu filter customer_id chọn rất ít dòng, hãy xem index phù hợp và plan thực tế; chỉ chọn cột cần giúp giảm dữ liệu đọc/trả. Index không chắc luôn được dùng hoặc luôn nhanh hơn. Statistics, selectivity và chi phí lookup ảnh hưởng quyết định của optimizer.</p></details></article>
+<article class="case-card"><h3 id="practice-2-s2-q10">LEFT JOIN rồi lọc WHERE</h3><p lang="en">A query uses LEFT JOIN orders o ON c.customer_id = o.customer_id and then applies WHERE o.order_date &gt;= '2026-01-01'. What is the effect?</p><details><summary>Xem đáp án đúng và cách suy luận</summary><p><strong>The filter removes null-extended rows, so customers without qualifying orders are excluded</strong></p><p>LEFT JOIN tạo row với các cột orders bằng NULL cho khách không có đơn. So sánh NULL &gt;= ngày không cho TRUE, nên WHERE loại các row đó. Nếu cần giữ mọi khách và chỉ ghép đơn đạt điều kiện, đưa điều kiện ngày vào ON.</p></details></article>
+<p><a href="../quiz.html?mode=lesson&amp;unit=3">Làm toàn bộ quiz Unit 3 →</a></p></section></main></div>
+<nav class="lesson-nav"><a href="unit-02.html"><small>← Bài trước</small><b>Python for Application Development</b></a><a class="next" href="unit-04.html"><small>Bài tiếp →</small><b>API Development with FastAPI</b></a></nav><footer>FastTrack DE01 Learning Hub V2 · Unit 03 / 18</footer><script src="../assets/lesson.js"></script></body></html>

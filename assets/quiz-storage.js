@@ -4,7 +4,7 @@
   else root.DE01QuizStorage = api;
 }(typeof globalThis !== 'undefined' ? globalThis : this, function (root) {
   'use strict';
-  const KEY = 'de01-quiz-state-v1';
+  const KEY = 'de01-v2-quiz-state-v1';
 
   function emptyState() { return { version: 1, activeAttempt: null, history: [] }; }
   function adapter(store) {
@@ -51,6 +51,7 @@
       id: attempt.id,
       mode: attempt.mode,
       unit: attempt.unit,
+      practiceSet: attempt.practiceSet || null,
       sourceAttemptId: attempt.sourceAttemptId || null,
       questionIds: attempt.questionIds.slice(),
       startedAt: attempt.startedAt,

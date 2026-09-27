@@ -1,8 +1,28 @@
 <!doctype html>
-<html lang="vi" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="DE01 Unit 1: Version Control with Git"><title>DE01 · 01 · Version Control with Git</title><link rel="stylesheet" href="../assets/lesson.css"></head>
+<html lang="vi" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="DE01 Unit 1: Version Control with Git"><title>DE01 · 01 · Version Control with Git</title><link rel="stylesheet" href="../assets/lesson.css"><link rel="stylesheet" href="../assets/v2.css"></head>
 <body data-unit="1"><header class="topbar"><a class="back" href="../index.html">← Learning Hub</a><span class="top-title">Unit 01 · Version Control with Git</span><div class="tools"><button class="print" id="print">In</button><button id="theme" aria-label="Đổi giao diện">◐</button></div></header>
 <section class="lesson-hero"><div class="lesson-hero-inner"><div class="unit">DE01 · Unit 01 / 18</div><h1>Version Control with Git</h1><p>Quản lý thay đổi như các snapshot có thể review, truy vết và phục hồi.</p><div class="lesson-meta"><span class="pill">Git</span><span class="pill">Branch</span><span class="pill">Pull Request</span><span class="pill">Recovery</span></div></div><div class="progress-wrap"><div class="progress-track"><div class="progress-fill" id="courseProgress"></div></div><button class="done-btn" id="doneButton">○ Đánh dấu đã học</button></div></section>
 <div class="page"><aside class="toc"><p class="toc-title">Trong bài này</p><nav id="tocNav"></nav></aside><main class="content">
+<section class="beginner-guide" aria-labelledby="beginner-start">
+<p class="guide-label">V2 · Bắt đầu từ đây</p>
+<h2 id="beginner-start">Git là lịch sử những thay đổi có chủ đích</h2>
+<p>Khi sửa một script, bạn cần biết bản nào chạy tốt và ai đã thay điều gì. Git lưu các mốc thay đổi gọi là commit. Repository là nơi giữ lịch sử; branch là tên trỏ tới một chuỗi commit. Bạn có thể thử một cách làm trên branch riêng rồi đưa vào main sau khi review.</p>
+<h3 id="beginner-vocabulary">Từ vựng trước khi đọc tiếp</h3>
+<dl><dt>Working tree</dt><dd>Các file bạn đang nhìn và sửa trong thư mục.</dd>
+<dt>Stage</dt><dd>Chọn phần thay đổi sẽ đi vào commit sắp tới.</dd>
+<dt>Remote</dt><dd>Repository ở nơi khác, ví dụ GitHub; push gửi commit, fetch lấy thông tin mới.</dd></dl>
+<h3 id="beginner-example">Đọc ví dụ theo từng bước</h3>
+<ol><li>Sửa một hàm và thêm một test chứng minh kết quả mong đợi.</li><li>Đọc git diff để biết mình sắp chia sẻ gì; git add chỉ chọn các file liên quan.</li><li>Commit với thông điệp nêu mục đích, push branch và review trước khi merge.</li></ol>
+<pre><code>git status
+git diff
+git add transform.py tests/test_transform.py
+git commit -m &quot;Validate negative quantity&quot;
+git push origin feature/validate-quantity</code></pre>
+<p><strong>Kết quả và cách hiểu:</strong> Một commit chứa thay đổi và test liên quan, đủ nhỏ để giải thích hoặc đảo lại. Các lệnh trên giả định bạn đã có repository và branch feature/validate-quantity.</p>
+<p class="guide-caution"><strong>Dễ nhầm:</strong> Git giữ code và metadata của pipeline, không phải kho chứa mọi file dữ liệu lớn. Secret đã commit vẫn tồn tại trong lịch sử dù xóa khỏi file hiện tại.</p>
+<details><summary>Tự kiểm tra: Nếu đã push password lên branch dùng chung, bạn phải làm gì trước?</summary><p>Vô hiệu hóa hoặc rotate credential để giá trị đã lộ không dùng được, rồi xử lý lịch sử và nơi lưu secret. Việc xóa dòng code không vô hiệu hóa password.</p></details>
+<p><a href="#practice-cases">Ôn các tình huống áp dụng trong bài ↓</a> · <a href="../question-bank.html?unit=1">Xem câu hỏi và lời giải của unit</a></p>
+</section>
 <h2 id="1-mental-model">1. Mental model</h2>
 <pre><code>Working directory -&gt; git add -&gt; Staging area -&gt; git commit -&gt; Local repository
                                                         -&gt; git push -&gt; Remote</code></pre>
@@ -106,5 +126,8 @@ git push --force-with-lease  # chỉ khi feature branch riêng đã rebase</code
 <li><strong>Vì sao rebase branch chung nguy hiểm?</strong> Nó thay commit ID, khiến lịch sử của người khác phân kỳ.</li>
 <li><strong>Khi nào dùng revert?</strong> Khi commit đã chia sẻ và cần đảo bằng một thay đổi có audit trail.</li>
 <li><strong>Git có phù hợp lưu file Parquet 10 GB không?</strong> Không; lưu data ở object storage và version metadata/manifest trong Git.</li>
-</ol></main></div>
-<nav class="lesson-nav"><span></span><a class="next" href="unit-02.html"><small>Bài tiếp →</small><b>Python for Application Development</b></a></nav><footer>FastTrack DE01 Learning Hub · Unit 01 / 18</footer><script src="../assets/lesson.js"></script></body></html>
+</ol><section class="practice-cases"><h2 id="practice-cases">Vận dụng: hiểu lý do trước khi chọn đáp án</h2>
+<p>Đọc tình huống, tự giải thích bằng lời của bạn rồi đối chiếu lời giải. Câu hỏi tiếng Anh giữ các thuật ngữ chuyên môn; phần giải thích dùng tiếng Việt.</p>
+<article class="case-card"><h3 id="practice-2-s5-q09">Secret đã push phải xử lý ngay</h3><p lang="en">A real database password was committed and pushed to a shared repository. What should happen first?</p><details><summary>Xem đáp án đúng và cách suy luận</summary><p><strong>Treat the credential as compromised and rotate it, then remove the secret from the repository/history and use an approved secret store</strong></p><p>Coi credential đã lộ và revoke/rotate trước để chặn sử dụng giá trị cũ. Sau đó xử lý file/history và chuyển sang secret store theo quy trình. Chỉ xóa dòng trong commit mới không vô hiệu hóa credential đã có trong clone hoặc log khác.</p></details></article>
+<p><a href="../quiz.html?mode=lesson&amp;unit=1">Làm toàn bộ quiz Unit 1 →</a></p></section></main></div>
+<nav class="lesson-nav"><span></span><a class="next" href="unit-02.html"><small>Bài tiếp →</small><b>Python for Application Development</b></a></nav><footer>FastTrack DE01 Learning Hub V2 · Unit 01 / 18</footer><script src="../assets/lesson.js"></script></body></html>

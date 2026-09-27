@@ -1,8 +1,28 @@
 <!doctype html>
-<html lang="vi" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="DE01 Unit 10: Data Storage Solutions on Azure"><title>DE01 · 10 · Data Storage Solutions on Azure</title><link rel="stylesheet" href="../assets/lesson.css"></head>
+<html lang="vi" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="DE01 Unit 10: Data Storage Solutions on Azure"><title>DE01 · 10 · Data Storage Solutions on Azure</title><link rel="stylesheet" href="../assets/lesson.css"><link rel="stylesheet" href="../assets/v2.css"></head>
 <body data-unit="10"><header class="topbar"><a class="back" href="../index.html">← Learning Hub</a><span class="top-title">Unit 10 · Data Storage Solutions on Azure</span><div class="tools"><button class="print" id="print">In</button><button id="theme" aria-label="Đổi giao diện">◐</button></div></header>
 <section class="lesson-hero"><div class="lesson-hero-inner"><div class="unit">DE01 · Unit 10 / 18</div><h1>Data Storage Solutions on Azure</h1><p>Chọn storage theo access pattern, format, security, retention và recovery.</p><div class="lesson-meta"><span class="pill">ADLS Gen2</span><span class="pill">Parquet</span><span class="pill">Partition</span><span class="pill">Lifecycle</span></div></div><div class="progress-wrap"><div class="progress-track"><div class="progress-fill" id="courseProgress"></div></div><button class="done-btn" id="doneButton">○ Đánh dấu đã học</button></div></section>
-<div class="page"><aside class="toc"><p class="toc-title">Trong bài này</p><nav id="tocNav"></nav></aside><main class="content"><h2 id="1-chon-storage-theo-access-pattern">1. Chọn storage theo access pattern</h2>
+<div class="page"><aside class="toc"><p class="toc-title">Trong bài này</p><nav id="tocNav"></nav></aside><main class="content">
+<section class="beginner-guide" aria-labelledby="beginner-start">
+<p class="guide-label">V2 · Bắt đầu từ đây</p>
+<h2 id="beginner-start">File format, thư mục và cách đọc dữ liệu</h2>
+<p>Storage giữ bytes; format quyết định bytes biểu diễn dữ liệu thế nào. CSV lưu text từng dòng, JSON phù hợp cấu trúc lồng nhau, Parquet tổ chức theo cột cho analytics. Chọn format theo cách sử dụng, không theo tên dịch vụ lưu file.</p>
+<h3 id="beginner-vocabulary">Từ vựng trước khi đọc tiếp</h3>
+<dl><dt>Raw / curated</dt><dd>Raw gần nguồn để replay; curated đã kiểm tra và chuẩn hóa để dùng.</dd>
+<dt>Columnar</dt><dd>Lưu theo cột để query vài cột không phải đọc toàn bộ row.</dd>
+<dt>Partition theo ngày</dt><dd>Tổ chức dữ liệu theo date giúp bỏ qua những ngày không cần.</dd>
+<dt>Schema</dt><dd>Tên cột, kiểu dữ liệu và quy ước cấu trúc.</dd></dl>
+<h3 id="beginner-example">Đọc ví dụ theo từng bước</h3>
+<ol><li>Giữ file nguồn ở raw kèm batch_id và thời điểm nhận.</li><li>Validate/cast rồi ghi Parquet vào curated/order_date=2026-01-01/.</li><li>Query chọn vài ngày và cột cần; engine có thể pruning partition/column.</li></ol>
+<pre><code>raw/orders/batch-001/orders.csv
+curated/orders/order_date=2026-01-01/part-001.parquet
+curated/orders/order_date=2026-01-02/part-001.parquet</code></pre>
+<p><strong>Kết quả và cách hiểu:</strong> Raw cho phép kiểm tra lại input; curated phục vụ query nhanh hơn. Folder partition là quy ước tổ chức để engine hiểu, không tự bảo đảm dữ liệu bên trong đúng ngày.</p>
+<p class="guide-caution"><strong>Dễ nhầm:</strong> Một triệu customer_id có thể sinh rất nhiều partition/file nhỏ. Chọn partition theo filter thường dùng và volume thay vì lấy mọi cột định danh làm folder.</p>
+<details><summary>Tự kiểm tra: Parquet có schema thì có cần validate không?</summary><p>Có. Có đúng type vẫn có thể thiếu key, sai amount hoặc trùng record. Schema là một lớp kiểm tra, không thay business validation.</p></details>
+<p><a href="#practice-cases">Ôn các tình huống áp dụng trong bài ↓</a> · <a href="../question-bank.html?unit=10">Xem câu hỏi và lời giải của unit</a></p>
+</section>
+<h2 id="1-chon-storage-theo-access-pattern">1. Chọn storage theo access pattern</h2>
 <p>Đừng bắt đầu bằng tên dịch vụ. Hỏi trước:</p>
 <ul>
 <li>Dữ liệu là file/object, relational, key-value hay analytical table?</li>
@@ -113,5 +133,10 @@
 <li><strong>Partition pruning xảy ra khi nào?</strong> Query filter cột/path partition theo cách engine nhận diện được.</li>
 <li><strong>Soft delete có phải backup?</strong> Không; nó giúp recovery ngắn hạn, không thay chiến lược backup/DR.</li>
 <li><strong>Vì sao Bronze immutable?</strong> Tăng audit/replay và tách lỗi transform khỏi dữ liệu nguồn đã nhận.</li>
-</ol></main></div>
-<nav class="lesson-nav"><a href="unit-09.html"><small>← Bài trước</small><b>Azure Fundamentals &amp; Core Infrastructure</b></a><a class="next" href="unit-11.html"><small>Bài tiếp →</small><b>Batch Data Processing on Azure</b></a></nav><footer>FastTrack DE01 Learning Hub · Unit 10 / 18</footer><script src="../assets/lesson.js"></script></body></html>
+</ol><section class="practice-cases"><h2 id="practice-cases">Vận dụng: hiểu lý do trước khi chọn đáp án</h2>
+<p>Đọc tình huống, tự giải thích bằng lời của bạn rồi đối chiếu lời giải. Câu hỏi tiếng Anh giữ các thuật ngữ chuyên môn; phần giải thích dùng tiếng Việt.</p>
+<article class="case-card"><h3 id="practice-1-s5-q06">ADLS Gen2 lưu gì?</h3><p lang="en">What is Azure Data Lake Storage Gen2 mainly used for in a data platform?</p><details><summary>Xem đáp án đúng và cách suy luận</summary><p><strong>Scalable file/object storage for data lake workloads</strong></p><p>ADLS Gen2 cung cấp lưu trữ file/object cho data lake. Một platform có thể giữ CSV đầu vào ở raw và Parquet đã chuẩn hóa ở curated. Storage giữ dữ liệu; engine như Spark đọc dữ liệu đó để xử lý.</p></details></article>
+<article class="case-card"><h3 id="practice-2-s1-q10">Tại sao chọn Parquet?</h3><p lang="en">Why is Parquet usually a better curated-layer format than CSV for analytical workloads?</p><details><summary>Xem đáp án đúng và cách suy luận</summary><p><strong>Parquet is columnar, compressed, and preserves schema information</strong></p><p>Parquet lưu dữ liệu theo cột, hỗ trợ nén và lưu thông tin schema. Query chỉ cần vài cột có thể đọc ít dữ liệu hơn CSV. Vẫn phải validate chất lượng và schema; kích thước thực tế phụ thuộc dữ liệu và codec, không phải lúc nào cũng nhỏ hơn.</p></details></article>
+<article class="case-card"><h3 id="practice-2-s4-q05">Raw và curated trên ADLS</h3><p lang="en">You need a raw/curated data zone for CSV, JSON, and Parquet files, organized by folders for analytical processing. Which Azure storage choice best matches the course?</p><details><summary>Xem đáp án đúng và cách suy luận</summary><p><strong>Azure Data Lake Storage Gen2</strong></p><p>ADLS Gen2 giữ nhiều loại file như CSV, JSON, Parquet và tổ chức theo đường dẫn. Có thể tách raw/ và curated/ với quyền khác nhau. Query engine đọc các file này; storage không tự biến chúng thành báo cáo đúng.</p></details></article>
+<p><a href="../quiz.html?mode=lesson&amp;unit=10">Làm toàn bộ quiz Unit 10 →</a></p></section></main></div>
+<nav class="lesson-nav"><a href="unit-09.html"><small>← Bài trước</small><b>Azure Fundamentals &amp; Core Infrastructure</b></a><a class="next" href="unit-11.html"><small>Bài tiếp →</small><b>Batch Data Processing on Azure</b></a></nav><footer>FastTrack DE01 Learning Hub V2 · Unit 10 / 18</footer><script src="../assets/lesson.js"></script></body></html>

@@ -157,11 +157,11 @@
   });
   document.getElementById('print').addEventListener('click', function () { window.print(); });
   const root = document.documentElement;
-  const storedTheme = localStorage.getItem('de01-theme');
+  const storedTheme = localStorage.getItem('de01-v2-theme');
   if (storedTheme) root.dataset.theme = storedTheme;
   document.getElementById('theme').addEventListener('click', function () {
     root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
-    localStorage.setItem('de01-theme', root.dataset.theme);
+    localStorage.setItem('de01-v2-theme', root.dataset.theme);
   });
 
   renderStages(); renderDrills(); renderRubric(); renderCoverage(); recommendation(); renderSummary();

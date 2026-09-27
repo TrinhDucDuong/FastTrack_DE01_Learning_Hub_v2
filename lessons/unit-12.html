@@ -1,8 +1,28 @@
 <!doctype html>
-<html lang="vi" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="DE01 Unit 12: Real-time Data Streaming on Azure"><title>DE01 · 12 · Real-time Data Streaming on Azure</title><link rel="stylesheet" href="../assets/lesson.css"></head>
+<html lang="vi" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="DE01 Unit 12: Real-time Data Streaming on Azure"><title>DE01 · 12 · Real-time Data Streaming on Azure</title><link rel="stylesheet" href="../assets/lesson.css"><link rel="stylesheet" href="../assets/v2.css"></head>
 <body data-unit="12"><header class="topbar"><a class="back" href="../index.html">← Learning Hub</a><span class="top-title">Unit 12 · Real-time Data Streaming on Azure</span><div class="tools"><button class="print" id="print">In</button><button id="theme" aria-label="Đổi giao diện">◐</button></div></header>
 <section class="lesson-hero"><div class="lesson-hero-inner"><div class="unit">DE01 · Unit 12 / 18</div><h1>Real-time Data Streaming on Azure</h1><p>Xử lý event liên tục với partition, checkpoint và delivery semantics.</p><div class="lesson-meta"><span class="pill">Event Hubs</span><span class="pill">Streaming</span><span class="pill">Watermark</span><span class="pill">Checkpoint</span></div></div><div class="progress-wrap"><div class="progress-track"><div class="progress-fill" id="courseProgress"></div></div><button class="done-btn" id="doneButton">○ Đánh dấu đã học</button></div></section>
-<div class="page"><aside class="toc"><p class="toc-title">Trong bài này</p><nav id="tocNav"></nav></aside><main class="content"><h2 id="1-streaming-khong-co-nghia-la-ngay-lap-tuc">1. Streaming không có nghĩa là &quot;ngay lập tức&quot;</h2>
+<div class="page"><aside class="toc"><p class="toc-title">Trong bài này</p><nav id="tocNav"></nav></aside><main class="content">
+<section class="beginner-guide" aria-labelledby="beginner-start">
+<p class="guide-label">V2 · Bắt đầu từ đây</p>
+<h2 id="beginner-start">Streaming và hai chiếc đồng hồ</h2>
+<p>Sự kiện có thể được tạo lúc 10:00 nhưng tới hệ thống lúc 10:07. Event time nói sự kiện xảy ra khi nào; processing time nói hệ thống xử lý khi nào. Nếu doanh thu phải tính theo lúc mua, dùng event time và có policy cho dữ liệu đến muộn.</p>
+<h3 id="beginner-vocabulary">Từ vựng trước khi đọc tiếp</h3>
+<dl><dt>Event</dt><dd>Một thông báo về sự việc, nên có ID và timestamp.</dd>
+<dt>Window</dt><dd>Khoảng thời gian gom sự kiện để tính toán.</dd>
+<dt>Checkpoint</dt><dd>Lưu progress/state để phục hồi sau restart.</dd>
+<dt>Watermark</dt><dd>Ngưỡng tiến triển event time giúp quản lý state và late data theo policy.</dd></dl>
+<h3 id="beginner-example">Đọc ví dụ theo từng bước</h3>
+<ol><li>Consumer đọc event từ partition và ghi nhận event_id.</li><li>Gom event vào window theo event time, không chỉ giờ nhận.</li><li>Lưu progress/state để restart; sink dedup để event replay không nhân kết quả.</li></ol>
+<pre><code>event_time:       10:00 ── sự kiện mua hàng
+processing_time:  10:07 ── hệ thống nhận sự kiện
+business window:  [10:00, 10:05) theo thời điểm mua</code></pre>
+<p><strong>Kết quả và cách hiểu:</strong> Sự kiện đến sau window nên cần late-data policy để quyết định cập nhật, giữ hay đưa sang xử lý bổ sung. Không thể suy ra chính sách từ checkpoint.</p>
+<p class="guide-caution"><strong>Dễ nhầm:</strong> Checkpoint không tự bảo đảm exactly-once với mọi sink. Crash sau write nhưng trước ghi progress có thể khiến event được đọc lại.</p>
+<details><summary>Tự kiểm tra: Consumer khởi động lại được nhưng số liệu window sai khi event tới muộn: thiếu gì?</summary><p>Cần kiểm tra event-time parsing, window và late-data/watermark policy. Recovery state và tính đúng theo thời gian là hai trách nhiệm riêng.</p></details>
+<p><a href="#practice-cases">Ôn các tình huống áp dụng trong bài ↓</a> · <a href="../question-bank.html?unit=12">Xem câu hỏi và lời giải của unit</a></p>
+</section>
+<h2 id="1-streaming-khong-co-nghia-la-ngay-lap-tuc">1. Streaming không có nghĩa là &quot;ngay lập tức&quot;</h2>
 <p>Streaming xử lý luồng event liên tục với latency thấp hơn batch. Trước khi chọn, phải xác định SLA: vài giây, vài phút hay một giờ. Nếu business chấp nhận hàng giờ, batch thường đơn giản và rẻ hơn.</p>
 <pre><code>Producers -&gt; Event Hubs -&gt; Stream processor -&gt; Bronze/Silver -&gt; Serving
                   \-&gt; checkpoint / monitoring / dead-letter</code></pre>
@@ -141,5 +161,8 @@ query = (
 <li><strong>Một partition có ordering với partition khác không?</strong> Không có global ordering guarantee.</li>
 <li><strong>Streaming thay batch hoàn toàn không?</strong> Không; backfill/reconciliation thường vẫn dùng batch.</li>
 <li><strong>Checkpoint có nên đặt local disk worker?</strong> Không cho production durable recovery; worker mất sẽ mất progress.</li>
-</ol></main></div>
-<nav class="lesson-nav"><a href="unit-11.html"><small>← Bài trước</small><b>Batch Data Processing on Azure</b></a><a class="next" href="unit-13.html"><small>Bài tiếp →</small><b>Monitoring &amp; Operations on Azure</b></a></nav><footer>FastTrack DE01 Learning Hub · Unit 12 / 18</footer><script src="../assets/lesson.js"></script></body></html>
+</ol><section class="practice-cases"><h2 id="practice-cases">Vận dụng: hiểu lý do trước khi chọn đáp án</h2>
+<p>Đọc tình huống, tự giải thích bằng lời của bạn rồi đối chiếu lời giải. Câu hỏi tiếng Anh giữ các thuật ngữ chuyên môn; phần giải thích dùng tiếng Việt.</p>
+<article class="case-card"><h3 id="practice-2-s4-q01">Restart và event đến muộn</h3><p lang="en">A streaming job must recover after restart and also handle events that arrive later than their event time. Which pair of concepts is most relevant?</p><details><summary>Xem đáp án đúng và cách suy luận</summary><p><strong>Checkpoint/recovery state plus event-time/window handling for late data</strong></p><p>Checkpoint lưu progress/state để stream khôi phục sau restart. Event-time window và late-data policy xử lý sự kiện xảy ra từ trước nhưng đến trễ. Hai cơ chế giải quyết hai vấn đề khác nhau; checkpoint một mình không xử lý đúng business window.</p></details></article>
+<p><a href="../quiz.html?mode=lesson&amp;unit=12">Làm toàn bộ quiz Unit 12 →</a></p></section></main></div>
+<nav class="lesson-nav"><a href="unit-11.html"><small>← Bài trước</small><b>Batch Data Processing on Azure</b></a><a class="next" href="unit-13.html"><small>Bài tiếp →</small><b>Monitoring &amp; Operations on Azure</b></a></nav><footer>FastTrack DE01 Learning Hub V2 · Unit 12 / 18</footer><script src="../assets/lesson.js"></script></body></html>

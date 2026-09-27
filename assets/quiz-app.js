@@ -3,9 +3,10 @@
 
   const params = new URLSearchParams(window.location.search);
   const requestedMode = params.get('mode');
-  const mode = ['lesson', 'exam', 'retry'].includes(requestedMode) ? requestedMode : 'setup';
+  const mode = ['lesson', 'exam', 'retry', 'practice'].includes(requestedMode) ? requestedMode : 'setup';
   const unit = Number(params.get('unit'));
-  const examCount = Math.max(1, Math.min(Math.floor(Number(params.get('count')) || 40), 360));
+  const examCount = Math.max(1, Math.min(Math.floor(Number(params.get('count')) || 40), window.DE01QuestionLoader.total));
+  const practiceSet = Number(params.get('set'));
   const sourceAttemptId = params.get('attempt');
   const forceRestart = params.get('restart') === '1';
   const loader = window.DE01QuestionLoader;
@@ -91,6 +92,7 @@
         els.validation.textContent = '';
         persistAttempt();
         renderPalette();
+        els.submit.textContent = engine.isComplete(attempt) ? 'Nộp bài' : 'Nộp bài · còn ' + engine.unansweredIds(attempt).length + ' câu';
       });
       const key = document.createElement('span'); key.className = 'choice-key'; key.textContent = choice.id.toUpperCase() + '.';
       const text = document.createElement('span'); text.textContent = choice.text;
@@ -109,11 +111,14 @@
       const question = questions.find(function (candidate) { return candidate.id === item.questionId; });
       const article = document.createElement('article');
       article.className = 'review-item ' + (item.correct ? 'correct' : 'incorrect');
-      article.innerHTML = '<h3>Câu ' + (index + 1) + ': ' + question.prompt + '</h3>' +
-        '<p class="answer">Bạn chọn: ' + choiceText(question, item.selected) + '</p>' +
-        '<p class="answer">Đáp án đúng: ' + choiceText(question, item.correctChoice) + '</p>' +
-        '<p class="explanation">' + question.explanation + '</p>' +
-        '<a href="' + question.lessonUrl + '">Ôn lại phần kiến thức →</a>';
+      [['h3', 'Câu ' + (index + 1) + ': ' + question.prompt],
+        ['p', 'Bạn chọn: ' + choiceText(question, item.selected)],
+        ['p', 'Đáp án đúng: ' + choiceText(question, item.correctChoice)],
+        ['p', 'Vì sao đúng: ' + question.explanation]].forEach(function (entry) {
+          const node = document.createElement(entry[0]); node.textContent = entry[1]; article.appendChild(node);
+        });
+      const lessonLink = document.createElement('a'); lessonLink.href = question.lessonUrl;
+      lessonLink.textContent = 'Ôn lại phần kiến thức →'; article.appendChild(lessonLink);
       els.reviewList.appendChild(article);
     });
   }
@@ -158,11 +163,11 @@
     els.reviewButton.textContent = els.reviewList.hidden ? 'Xem lại đáp án' : 'Ẩn phần review';
   });
 
-  const storedTheme = localStorage.getItem('de01-theme');
+  const storedTheme = localStorage.getItem('de01-v2-theme');
   if (storedTheme) root.dataset.theme = storedTheme;
   document.getElementById('theme').addEventListener('click', function () {
     root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
-    localStorage.setItem('de01-theme', root.dataset.theme);
+    localStorage.setItem('de01-v2-theme', root.dataset.theme);
   });
 
   const validation = loader.validateBank();
@@ -179,15 +184,28 @@
     lessonTitles.forEach(function (title, index) {
       const option = document.createElement('option');
       option.value = index + 1;
-      option.textContent = 'Unit ' + String(index + 1).padStart(2, '0') + ' · ' + title;
+      option.textContent = 'Unit ' + String(index + 1).padStart(2, '0') + ' · ' + title + ' (' + loader.forLesson(index + 1).length + ' câu)';
       lessonSelect.appendChild(option);
     });
     document.getElementById('quizIntro').hidden = true;
     els.setup.hidden = false;
     els.topTitle.textContent = 'Chế độ kiểm tra';
+    document.getElementById('examCount').max = loader.total;
+    document.getElementById('examCountHint').textContent = 'Chọn từ 1 đến ' + loader.total + ' câu; từ 18 câu trở lên phủ đủ 18 unit.';
+    const pending = storage.getActive();
+    if (pending && !pending.submittedAt) {
+      const resumeParams = new URLSearchParams({mode: pending.mode});
+      if (pending.unit) resumeParams.set('unit', pending.unit);
+      if (pending.mode === 'exam') resumeParams.set('count', pending.questionIds.length);
+      if (pending.practiceSet) resumeParams.set('set', pending.practiceSet);
+      if (pending.sourceAttemptId) resumeParams.set('attempt', pending.sourceAttemptId);
+      document.getElementById('resumeLink').href = 'quiz.html?' + resumeParams;
+      document.getElementById('resumePanel').hidden = false;
+    }
     return;
   }
   if (mode === 'lesson' && (!Number.isInteger(unit) || unit < 1 || unit > 18)) { fail('Unit không hợp lệ.'); return; }
+  if (mode === 'practice' && ![1, 2].includes(practiceSet)) { fail('Bộ đề không hợp lệ.'); return; }
   if (mode === 'retry' && !sourceAttemptId) { fail('Không tìm thấy lượt làm bài cần ôn lại.'); return; }
 
   if (mode === 'retry') {
@@ -196,16 +214,23 @@
     const incorrectIds = sourceAttempt.items.filter(function (item) { return !item.correct; }).map(function (item) { return item.questionId; });
     questions = loader.byIds(incorrectIds);
     if (!questions.length) { fail('Lượt làm bài này không có câu sai để làm lại.'); return; }
+  } else if (mode === 'practice') {
+    questions = loader.forPractice(practiceSet);
   } else {
     questions = mode === 'exam' ? loader.forExam({ count: examCount }) : loader.forLesson(unit);
   }
   if (!questions.length) { fail('Chưa có câu hỏi cho bài học này.'); return; }
 
-  if (forceRestart) storage.clearActive();
+  if (forceRestart) {
+    storage.clearActive();
+    params.delete('restart');
+    window.history.replaceState(null, '', 'quiz.html?' + params.toString());
+  }
   const active = storage.getActive();
   const sameContext = active && !active.submittedAt && active.mode === mode &&
     (mode !== 'lesson' || active.unit === unit) &&
     (mode !== 'exam' || active.questionIds.length === examCount) &&
+    (mode !== 'practice' || active.practiceSet === practiceSet) &&
     (mode !== 'retry' || active.sourceAttemptId === sourceAttemptId);
   if (sameContext) {
     const restoredQuestions = loader.byIds(active.questionIds);
@@ -216,17 +241,19 @@
     }
   }
   if (!attempt) {
-    attempt = engine.createAttempt({ mode: mode, unit: mode === 'lesson' ? unit : null, sourceAttemptId: sourceAttemptId }, questions);
+    attempt = engine.createAttempt({ mode: mode, unit: mode === 'lesson' ? unit : null, sourceAttemptId: sourceAttemptId, practiceSet: mode === 'practice' ? practiceSet : null }, questions);
     persistAttempt();
   }
 
-  const labels = { exam: 'Full-course exam', lesson: 'Lesson quiz', retry: 'Retry incorrect' };
+  const labels = { exam: 'Full-course exam', lesson: 'Lesson quiz', retry: 'Retry incorrect', practice: 'Practice set' };
   const titles = {
     exam: 'Bài thi tổng hợp DE01',
+    practice: 'Bộ luyện tập ' + practiceSet,
     lesson: 'Quiz Unit ' + String(unit).padStart(2, '0'),
     retry: 'Ôn lại các câu trả lời sai'
   };
   const descriptions = {
+    practice: practiceSet === 1 ? '16 câu hiện có của bộ 1. Bộ này chưa đầy đủ.' : '60 câu của bộ 2, bao phủ 5 nhóm kiến thức.',
     exam: examCount + ' câu được lấy ngẫu nhiên từ ngân hàng toàn khóa. Hoàn thành toàn bộ trước khi nộp bài.',
     lesson: 'Toàn bộ câu hỏi của unit này, bao phủ từ khái niệm đến tình huống ứng dụng.',
     retry: 'Tập trung vào các câu chưa đúng trong lượt làm bài đã chọn.'

@@ -1,8 +1,34 @@
 <!doctype html>
-<html lang="vi" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="DE01 Unit 4: API Development with FastAPI"><title>DE01 · 04 · API Development with FastAPI</title><link rel="stylesheet" href="../assets/lesson.css"></head>
+<html lang="vi" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="DE01 Unit 4: API Development with FastAPI"><title>DE01 · 04 · API Development with FastAPI</title><link rel="stylesheet" href="../assets/lesson.css"><link rel="stylesheet" href="../assets/v2.css"></head>
 <body data-unit="4"><header class="topbar"><a class="back" href="../index.html">← Learning Hub</a><span class="top-title">Unit 04 · API Development with FastAPI</span><div class="tools"><button class="print" id="print">In</button><button id="theme" aria-label="Đổi giao diện">◐</button></div></header>
 <section class="lesson-hero"><div class="lesson-hero-inner"><div class="unit">DE01 · Unit 04 / 18</div><h1>API Development with FastAPI</h1><p>Thiết kế contract rõ, retry an toàn và lỗi mà cả máy lẫn người đọc được.</p><div class="lesson-meta"><span class="pill">API</span><span class="pill">FastAPI</span><span class="pill">Idempotency</span><span class="pill">Security</span></div></div><div class="progress-wrap"><div class="progress-track"><div class="progress-fill" id="courseProgress"></div></div><button class="done-btn" id="doneButton">○ Đánh dấu đã học</button></div></section>
-<div class="page"><aside class="toc"><p class="toc-title">Trong bài này</p><nav id="tocNav"></nav></aside><main class="content"><h2 id="core-api-design">Thiết kế API cốt lõi</h2>
+<div class="page"><aside class="toc"><p class="toc-title">Trong bài này</p><nav id="tocNav"></nav></aside><main class="content">
+<section class="beginner-guide" aria-labelledby="beginner-start">
+<p class="guide-label">V2 · Bắt đầu từ đây</p>
+<h2 id="beginner-start">API là cửa vào có hợp đồng dữ liệu</h2>
+<p>Một chương trình có thể yêu cầu chương trình khác làm việc thông qua HTTP. Client gửi request gồm method, URL và có thể có JSON body. Server trả status code và response. FastAPI giúp viết phần cửa vào này, nhưng bạn vẫn phải thiết kế business rule và cách truy cập database.</p>
+<h3 id="beginner-vocabulary">Từ vựng trước khi đọc tiếp</h3>
+<dl><dt>Endpoint</dt><dd>Một đường dẫn và method, ví dụ POST /orders.</dd>
+<dt>Request model</dt><dd>Mô tả các field đầu vào, type và constraint cần kiểm tra.</dd>
+<dt>Service / repository</dt><dd>Service quyết định quy tắc nghiệp vụ; repository đọc/ghi database.</dd>
+<dt>Transaction</dt><dd>Nhóm thao tác ghi cần cùng thành công hoặc cùng rollback.</dd></dl>
+<h3 id="beginner-example">Đọc ví dụ theo từng bước</h3>
+<ol><li>Router nhận JSON, ví dụ quantity=2 và product_id=101.</li><li>Validation chặn quantity âm; service kiểm tra sản phẩm và tồn kho.</li><li>Repository ghi đơn và cập nhật tồn trong transaction; router trả response phù hợp.</li></ol>
+<pre><code># Minh họa schema; cần cài pydantic trong môi trường project.
+from pydantic import BaseModel, Field
+
+class OrderInput(BaseModel):
+    product_id: int
+    quantity: int = Field(gt=0)
+
+order = OrderInput(product_id=101, quantity=2)
+print(order.quantity)</code></pre>
+<p><strong>Kết quả và cách hiểu:</strong> In ra 2. Quantity=0 làm validation thất bại. Model này chưa kiểm tra sản phẩm tồn tại; đó là bước service/database thực hiện sau.</p>
+<p class="guide-caution"><strong>Dễ nhầm:</strong> Đầu vào đã validate vẫn cần SQL tham số hóa. Không ghép trực tiếp chuỗi người dùng vào câu lệnh. Query parameterization và input validation bảo vệ các boundary khác nhau.</p>
+<details><summary>Tự kiểm tra: Vì sao tách router khỏi logic tính tổng đơn?</summary><p>Logic có thể được test và tái dùng ở batch hoặc CLI mà không cần HTTP. Router tập trung chuyển request/response; service giữ quy tắc tính toán.</p></details>
+<p><a href="#practice-cases">Ôn các tình huống áp dụng trong bài ↓</a> · <a href="../question-bank.html?unit=4">Xem câu hỏi và lời giải của unit</a></p>
+</section>
+<h2 id="core-api-design">Thiết kế API cốt lõi</h2>
 <h2 id="1-muc-tieu">1. Mục tiêu</h2>
 <p>Thiết kế REST API có contract rõ, validation, authentication/authorization, idempotency, pagination, error model, timeout, test và observability.</p>
 <h2 id="2-request-lifecycle">2. Request lifecycle</h2>
@@ -227,5 +253,10 @@ LIMIT :limit</code></pre>
 <div class="endpoint"><span class="method">GET</span><span>/api/v1/export/orders</span></div>
 <div class="endpoint"><span class="method">GET</span><span>/api/v1/export/products</span></div>
 <div class="endpoint"><span class="method">GET</span><span>/api/v1/health</span></div>
-<div class="endpoint"><span class="method">GET</span><span>/api/v1/version</span></div></main></div>
-<nav class="lesson-nav"><a href="unit-03.html"><small>← Bài trước</small><b>Relational Databases &amp; Advanced SQL</b></a><a class="next" href="unit-05.html"><small>Bài tiếp →</small><b>Data Modeling &amp; Warehousing Concepts</b></a></nav><footer>FastTrack DE01 Learning Hub · Unit 04 / 18</footer><script src="../assets/lesson.js"></script></body></html>
+<div class="endpoint"><span class="method">GET</span><span>/api/v1/version</span></div><section class="practice-cases"><h2 id="practice-cases">Vận dụng: hiểu lý do trước khi chọn đáp án</h2>
+<p>Đọc tình huống, tự giải thích bằng lời của bạn rồi đối chiếu lời giải. Câu hỏi tiếng Anh giữ các thuật ngữ chuyên môn; phần giải thích dùng tiếng Việt.</p>
+<article class="case-card"><h3 id="practice-2-s2-q03">Phân lớp FastAPI</h3><p lang="en">Which FastAPI application structure best matches the course guidance?</p><details><summary>Xem đáp án đúng và cách suy luận</summary><p><strong>Separate routing, validation, business logic, and database-access responsibilities</strong></p><p>Router tiếp nhận HTTP, schema kiểm tra cấu trúc input, service áp quy tắc nghiệp vụ, repository truy cập database. Ví dụ endpoint đặt hàng gọi service thay vì chứa tất cả SQL. Tách trách nhiệm giúp thay database hoặc test business rule mà không dựng cả HTTP stack.</p></details></article>
+<article class="case-card"><h3 id="practice-2-s2-q11">Pydantic request model</h3><p lang="en">What is the main purpose of a Pydantic request model in the taught FastAPI workflow?</p><details><summary>Xem đáp án đúng và cách suy luận</summary><p><strong>Validate field types, required values, and simple constraints before persistence logic</strong></p><p>Request model mô tả field bắt buộc, type và constraint đơn giản như quantity &gt; 0. Framework kiểm tra đầu vào trước khi gọi persistence logic. Những quy tắc như còn hàng hay được phép đặt hàng vẫn cần service và database kiểm tra.</p></details></article>
+<article class="case-card"><h3 id="practice-2-s2-q12">Query tham số hóa và transaction</h3><p lang="en">Which database-access practice is most appropriate for a FastAPI CRUD endpoint?</p><details><summary>Xem đáp án đúng và cách suy luận</summary><p><strong>Use parameterized database operations and handle the connection/transaction lifecycle deliberately</strong></p><p>Parameterized query truyền giá trị riêng khỏi cấu trúc SQL để dữ liệu người dùng không biến thành câu lệnh. Quản lý connection và commit/rollback rõ ràng giúp tránh leak, transaction treo và ghi nửa chừng. Placeholder cụ thể phụ thuộc driver database.</p></details></article>
+<p><a href="../quiz.html?mode=lesson&amp;unit=4">Làm toàn bộ quiz Unit 4 →</a></p></section></main></div>
+<nav class="lesson-nav"><a href="unit-03.html"><small>← Bài trước</small><b>Relational Databases &amp; Advanced SQL</b></a><a class="next" href="unit-05.html"><small>Bài tiếp →</small><b>Data Modeling &amp; Warehousing Concepts</b></a></nav><footer>FastTrack DE01 Learning Hub V2 · Unit 04 / 18</footer><script src="../assets/lesson.js"></script></body></html>
